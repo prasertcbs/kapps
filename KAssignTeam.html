@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Student Group Randomizer by prasert@cbs.chula.ac.th</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/modern-normalize/modern-normalize.css">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #f7f9fa;
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #222;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .card {
+      background: #fff;
+      padding: 2em 1em;
+      border-radius: 16px;
+      max-width: 900px;
+      width: 100%;
+      margin: 3vh auto;
+      box-shadow: 0 2px 10px #0001;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .input-row {
+      display: flex;
+      gap: 2em;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 2em;
+    }
+    .input-left {
+      flex: 2 1 280px;
+      min-width: 230px;
+    }
+    .input-right {
+      flex: 1 1 190px;
+      min-width: 170px;
+      max-width: 260px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1em;
+      align-items: flex-start;
+    }
+    input, textarea, select, button {
+      border: 1px solid #ddd;
+      padding: 0.8em;
+      border-radius: 8px;
+      font-size: 1em;
+      box-sizing: border-box;
+      margin-bottom: 0.7em;
+      width: 100%;
+    }
+    .input-right input,
+    .input-right select,
+    .input-right button {
+      margin-bottom: 0.7em;
+      width: 100%;
+    }
+    button {
+      background: #4f8cfb;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #cccccc;
+    }
+    .team-row {
+      display: flex;
+      gap: 1em;
+      padding: 1em;
+      border-radius: 12px;
+      margin-bottom: 1.3em;
+      flex-wrap: wrap;
+      align-items: center;
+      width: 100%;
+      box-sizing: border-box;
+      transition: background 0.3s;
+      min-width: 0;
+    }
+    .team-label {
+      font-weight: bold;
+      font-size: 1.1em;
+      margin-right: 1em;
+      min-width: 84px;
+      text-align: right;
+      flex: 0 0 auto;
+    }
+    .name-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 0.8em 1.2em;
+      box-shadow: 0 1px 2px #0001;
+      margin-bottom: 0.3em;
+      display: inline-block;
+      font-size: 1em;
+      font-weight: 500;
+      margin-right: 4px;
+      min-width: 80px;
+      min-height: 42px;
+      transition: background 0.4s;
+      word-break: break-word;
+      box-sizing: border-box;
+      max-width: 140px;
+    }
+    .color-team-0 { background: #fbe9e7; }
+    .color-team-1 { background: #e8f5e9; }
+    .color-team-2 { background: #e3f2fd; }
+    .color-team-3 { background: #fffde7; }
+    .color-team-4 { background: #f3e5f5; }
+    .color-team-5 { background: #ede7f6; }
+    .color-team-6 { background: #fff3e0; }
+    .color-team-7 { background: #ffebee; }
+    .color-team-8 { background: #fce4ec; }
+    .color-team-9 { background: #e0f2f1; }
+    .color-team-10 { background: #e8f5e9; }
+    .color-team-11 { background: #e3f2fd; }
+    .color-team-12 { background: #fffde7; }
+    .color-team-13 { background: #f3e5f5; }
+    .color-team-14 { background: #ede7f6; }
+    .color-team-15 { background: #fff3e0; }
+    .color-team-16 { background: #ffebee; }
+    .color-team-17 { background: #fce4ec; }
+    .color-team-18 { background: #e0f2f1; }
+    .color-team-19 { background: #fbe9e7; }
+    @media (max-width: 900px) {
+      .card { padding: 1em 0.3em; }
+      .input-row { gap: 1em; }
+    }
+    @media (max-width:600px) {
+      .card { padding: 1em 0; border-radius: 0; margin: 0; box-shadow: none; }
+      .input-row { flex-direction: column; gap: 0.7em; }
+      .input-left, .input-right { min-width: 0; max-width: 100%; width: 100%; }
+      .team-row { flex-direction: column; gap: 0.7em; padding: 0.7em; }
+      .team-label { margin-bottom: 0.5em; text-align: left; }
+      .name-card { font-size: 1em; min-width: 70px; max-width: 100vw; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2 style="margin-top:0;">Student Group Randomizer</h2>
+    <div class="input-row">
+      <div class="input-left">
+        <label>
+          Paste student data (ID, Name per line, CSV):<br>
+          <textarea id="studentText" rows="6" placeholder="12345,John Doe&#10;67890,Jane Smith"></textarea>
+        </label>
+        <label>
+          Or upload CSV file:
+          <input type="file" id="fileInput" accept=".csv">
+        </label>
+      </div>
+      <div class="input-right">
+        <label>
+          Number of Groups:
+          <input type="number" id="groupCount" min="2" max="20" value="3">
+        </label>
+        <button onclick="randomizeGroups()" id="assignBtn">Assign Groups</button>
+        <button onclick="downloadCSV()" id="downloadBtn" style="display:none;">Download CSV</button>
+      </div>
+    </div>
+    <div id="result"></div>
+  </div>
+  <script>
+    let groups = [];
+    let groupData = [];
+    let students = [];
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('studentText').value = evt.target.result;
+      };
+      reader.readAsText(file);
+    });
+
+    function parseInput() {
+      const text = document.getElementById('studentText').value.trim();
+      if (text) {
+        return text
+          .split('\n')
+          .map(row => row.split(',').map(field => field.trim()))
+          .filter(arr => arr.length >= 2 && arr[0] && arr[1]);
+      }
+      return [];
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function balancedGroups(studentsArr, nGroups) {
+      // Returns array of arrays, balanced as evenly as possible
+      let total = studentsArr.length;
+      let baseSize = Math.floor(total / nGroups);
+      let extras = total % nGroups; // first 'extras' groups get one more
+      let result = [];
+      let idx = 0;
+      for (let g = 0; g < nGroups; g++) {
+        let thisGroupSize = baseSize + (g < extras ? 1 : 0);
+        let thisGroup = studentsArr.slice(idx, idx + thisGroupSize);
+        result.push(thisGroup);
+        idx += thisGroupSize;
+      }
+      return result;
+    }
+
+    function buildSkeleton(groupsCount, studentsArr) {
+      let html = '';
+      let balanced = balancedGroups(studentsArr, groupsCount); // group sizes may differ +/- 1
+      balanced.forEach((grp, i) => {
+        const colorClass = `color-team-${i % 20}`; // wrap index so colors exist for group > 10
+        html += `<div class="team-row ${colorClass}">
+            <span class="team-label">Group ${i+1}</span>
+            <div style="display:flex; gap:0.7em; flex-wrap:wrap; width:100%;">`;
+        grp.forEach((_, j) => {
+          html += `<span class="name-card" id="card-${i}-${j}"></span>`;
+        });
+        html += `</div></div>`;
+      });
+      document.getElementById('result').innerHTML = html;
+    }
+
+    function animateCards(assignedGroups, studentsArr) {
+      let cards = [];
+      assignedGroups.forEach((grp, gi) => {
+        grp.forEach((stu, si) => {
+          cards.push({gid: gi, sid: si, final: stu});
+        });
+      });
+      let allNames = studentsArr.map(x => x[1]);
+      cards.forEach((card, idx) => {
+        let elem = document.getElementById(`card-${card.gid}-${card.sid}`);
+        let duration = 2700 + Math.random()*300;
+        let interval = 75;
+        let spins = setInterval(() => {
+          let randIdx = Math.floor(Math.random()*studentsArr.length);
+          elem.innerHTML = studentsArr[randIdx][1] + '<br><span style="font-size:0.9em;color:#aaa;">' + studentsArr[randIdx][0] + '</span>';
+          elem.style.opacity = '0.75';
+        }, interval);
+        setTimeout(() => {
+          clearInterval(spins);
+          elem.innerHTML = card.final[1] + '<br><span style="font-size:0.9em;color:#666;">' + card.final[0] + '</span>';
+          elem.style.opacity = '1';
+        }, duration);
+      });
+    }
+
+    function randomizeGroups() {
+      students = parseInput();
+      const nGroups = parseInt(document.getElementById('groupCount').value, 10);
+      if (!students.length || nGroups < 2 || nGroups > students.length || nGroups > 20) {
+        alert('Please enter valid student list and group count (max 20).');
+        return;
+      }
+      document.getElementById('assignBtn').disabled = true;
+      shuffleArray(students);
+      groups = balancedGroups(students, nGroups);
+      groupData = [];
+      buildSkeleton(nGroups, students);
+      setTimeout(() => animateCards(groups, students), 100);
+      setTimeout(() => {
+        groups.forEach((grp, i) => {
+          grp.forEach(stu => {
+            groupData.push({group: i+1, id: stu[0], name: stu[1]});
+          });
+        });
+        document.getElementById('downloadBtn').style.display = 'inline-block';
+        document.getElementById('assignBtn').disabled = false;
+      }, 1200);
+    }
+
+    function downloadCSV() {
+      if (!groupData.length) return;
+      const rows = [['Group','ID','Name'], ...groupData.map(row => [row.group, row.id, row.name])];
+      const csvContent = rows.map(row => row.join(',')).join('\n');
+      const utf8BOM = '\uFEFF';
+      const blob = new Blob([utf8BOM + csvContent], {type: 'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'group_assignments.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

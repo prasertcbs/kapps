@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>KRandom by prasert@cbs.chula.ac.th</title>
+        <style>
+            :root {
+                --bg: #0b1020;
+                --panel: #121933;
+                --panel-alt: #0e142a;
+                --text: #e7ecff;
+                --muted: #9db0ff;
+                --accent: #39c6ff;
+                --danger: #ff647c;
+                --ok: #28d07f;
+                --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+                --radius: 16px;
+            }
+            html,
+            body {
+                height: 100%;
+            }
+            body {
+                margin: 0;
+                background: radial-gradient(1200px 800px at 75% -10%, #1d2a54 0%, var(--bg) 55%);
+                color: var(--text);
+                font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial,
+                    'Apple Color Emoji', 'Segoe UI Emoji';
+                display: grid;
+                grid-template-rows: auto 1fr auto;
+                min-height: 100%;
+            }
+            header {
+                padding: 16px 20px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            header h1 {
+                font-size: clamp(18px, 2.4vw, 28px);
+                margin: 0;
+                font-weight: 700;
+                letter-spacing: 0.3px;
+            }
+            header .sub {
+                opacity: 0.8;
+                font-size: 0.9rem;
+            }
+
+            .container {
+                display: grid;
+                grid-template-columns: 1.2fr 1fr;
+                gap: 18px;
+                padding: 12px 20px 20px;
+            }
+            .stage {
+                grid-column: 1 / -1;
+                background: linear-gradient(#0f162f, #0c1430);
+                border-radius: var(--radius);
+                box-shadow: var(--shadow);
+                position: relative;
+                overflow: hidden;
+                min-height: 36vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 16px;
+                border: 1px solid #1e2b5c;
+            }
+            .stage-text {
+                font-weight: 700;
+                letter-spacing: 0.5px;
+                text-align: center;
+                line-height: 1.2;
+                font-size: clamp(40px, 12vw, 160px);
+                color: var(--accent);
+                text-shadow: 0 6px 18px rgba(57, 198, 255, 0.25);
+                will-change: transform, opacity;
+                white-space: nowrap;
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .flip {
+                animation: flip 0.35s ease-in-out;
+            }
+            @keyframes flip {
+                0% {
+                    transform: rotateX(0deg);
+                    opacity: 0.85;
+                }
+                50% {
+                    transform: rotateX(85deg);
+                    opacity: 0.65;
+                }
+                100% {
+                    transform: rotateX(0deg);
+                    opacity: 1;
+                }
+            }
+            .winner {
+                animation: pop 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+                color: #5ee3a6;
+                text-shadow: 0 10px 28px rgba(46, 231, 151, 0.35);
+            }
+            @keyframes pop {
+                0% {
+                    transform: scale(0.9);
+                }
+                55% {
+                    transform: scale(1.08);
+                }
+                100% {
+                    transform: scale(1);
+                }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .flip,
+                .winner {
+                    animation: none;
+                }
+            }
+
+            .panel {
+                background: linear-gradient(180deg, var(--panel), var(--panel-alt));
+                border: 1px solid #1c2757;
+                border-radius: var(--radius);
+                box-shadow: var(--shadow);
+                padding: 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            .panel h2 {
+                margin: 0;
+                font-size: 1rem;
+                opacity: 0.9;
+            }
+            textarea {
+                width: 95%;
+                min-height: 100px;
+                max-height: 220px;
+                resize: vertical;
+                background: #0b1433;
+                border: 1px solid #1f2a5a;
+                border-radius: 10px;
+                color: var(--text);
+                padding: 10px 12px;
+                font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+                line-height: 1.35;
+            }
+            textarea[readonly] {
+                opacity: 0.9;
+            }
+
+            .row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                align-items: center;
+            }
+            label {
+                font-size: 0.92rem;
+                opacity: 0.95;
+            }
+            input[type='number'] {
+                width: 90px;
+                padding: 8px 10px;
+                border-radius: 10px;
+                border: 1px solid #243064;
+                background: #0b1433;
+                color: var(--text);
+            }
+            input[type='checkbox'] {
+                transform: translateY(1px);
+            }
+
+            .btns {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+            button {
+                cursor: pointer;
+                border: 1px solid #22306a;
+                background: #162153;
+                color: var(--text);
+                padding: 10px 14px;
+                border-radius: 12px;
+                font-weight: 600;
+                letter-spacing: 0.2px;
+            }
+            button.primary {
+                background: linear-gradient(180deg, #1d4ed8, #1e40af);
+                border-color: #1d4ed8;
+            }
+            button.ghost {
+                background: transparent;
+            }
+            button:disabled {
+                opacity: 0.55;
+                cursor: not-allowed;
+            }
+            .danger {
+                background: linear-gradient(180deg, #ff6b6b, #e14b68);
+                border-color: #ff6b6b;
+            }
+
+            .footer {
+                padding: 12px 20px;
+                font-size: 0.92rem;
+                color: var(--muted);
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+                align-items: center;
+            }
+            .badge {
+                display: inline-flex;
+                gap: 6px;
+                align-items: center;
+                padding: 6px 10px;
+                border-radius: 999px;
+                border: 1px solid #2a3a77;
+                background: #0c1433;
+            }
+
+            @media (max-width: 980px) {
+                .container {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <!-- <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M12 2l2.39 4.84 5.34.78-3.86 3.76.91 5.32L12 14.77 6.22 16.7l.91-5.32L3.27 7.62l5.34-.78L12 2z" stroke="#39c6ff" stroke-width="1.2" fill="none"/>
+    </svg> -->
+            <!-- <h1>Random Name Picker</h1> -->
+            <!-- <span class="sub">Flip through names and pick fairly</span> -->
+        </header>
+
+        <div class="container">
+            <section class="stage" aria-live="polite" aria-atomic="true">
+                <div id="stageText" class="stage-text">Ready</div>
+            </section>
+
+            <section class="panel" id="inputsPanel">
+                <h2>Name pool</h2>
+                <textarea id="poolTextarea" placeholder="Type or paste one name per line\nAli\nJane\nMark\nSimon">
+one
+two
+three
+four
+five
+six</textarea
+                >
+
+                <div class="btns">
+                    <button id="startBtn" class="primary">Start</button>
+                    <button id="stopBtn" class="ghost" disabled>Stop</button>
+                    <button id="shuffleBtn">Shuffle list</button>
+                    <button id="undoBtn" disabled>Undo last removal</button>
+                    <button id="resetBtn" class="danger">Reset</button>
+                </div>
+                <div class="row">
+                    <label
+                        >Duration (sec)
+                        <input id="durationInput" type="number" min="1" max="60" step="1" value="4" />
+                    </label>
+                    <label
+                        >Flip speed (ms)
+                        <input id="speedInput" type="number" min="30" max="300" step="10" value="300" />
+                    </label>
+                    <label> <input id="removeCheckbox" type="checkbox" checked /> Remove picked from pool </label>
+                </div>
+            </section>
+
+            <section class="panel" id="outputsPanel">
+                <h2>Picked names</h2>
+                <textarea id="pickedTextarea" readonly placeholder="Picked names will appear here...\n"></textarea>
+                <div class="btns">
+                    <button id="copyPickedBtn">Copy picked</button>
+                    <button id="downloadPickedBtn" disabled>Download CSV</button>
+                </div>
+            </section>
+        </div>
+
+        <div class="footer">
+            <div id="status">Enter names to begin.</div>
+            <div class="badge"><span id="poolCount">In pool: 0</span> • <span id="pickedCount">Picked: 0</span></div>
+        </div>
+
+        <script>
+            const els = {
+                poolTA: document.getElementById('poolTextarea'),
+                pickedTA: document.getElementById('pickedTextarea'),
+                duration: document.getElementById('durationInput'),
+                speed: document.getElementById('speedInput'),
+                remove: document.getElementById('removeCheckbox'),
+                start: document.getElementById('startBtn'),
+                stop: document.getElementById('stopBtn'),
+                shuffle: document.getElementById('shuffleBtn'),
+                undo: document.getElementById('undoBtn'),
+                reset: document.getElementById('resetBtn'),
+                copyPicked: document.getElementById('copyPickedBtn'),
+                downloadPicked: document.getElementById('downloadPickedBtn'),
+                stage: document.getElementById('stageText'),
+                status: document.getElementById('status'),
+                poolCount: document.getElementById('poolCount'),
+                pickedCount: document.getElementById('pickedCount'),
+            };
+
+            const state = {
+                pool: [],
+                picked: [],
+                spinning: false,
+                intervalId: null,
+                timeoutId: null,
+                lastRemoved: null,
+                get durationMs() {
+                    return clampNum(parseInt(els.duration.value, 10), 1, 60) * 1000;
+                },
+                get flipMs() {
+                    return clampNum(parseInt(els.speed.value, 10), 30, 300);
+                },
+            };
+
+            function clampNum(n, min, max) {
+                n = isFinite(n) ? n : min;
+                return Math.min(Math.max(n, min), max);
+            }
+
+            function readPool() {
+                const raw = els.poolTA.value
+                    .split(/\r?\n/)
+                    .map((s) => s.trim())
+                    .filter(Boolean);
+                const seen = new Set();
+                const out = [];
+                for (const name of raw) {
+                    const k = name.toLowerCase();
+                    if (!seen.has(k)) {
+                        seen.add(k);
+                        out.push(name);
+                    }
+                }
+                state.pool = out;
+                updateCounts();
+                return out;
+            }
+
+            function writePool() {
+                els.poolTA.value = state.pool.join('\n');
+                updateCounts();
+            }
+            function formatTimestamp(date) {
+                const d = date instanceof Date ? date : new Date(date);
+                const pad = (n) => String(n).padStart(2, '0');
+                const yyyy = d.getFullYear();
+                const mm = pad(d.getMonth() + 1);
+                const dd = pad(d.getDate());
+                const hh = pad(d.getHours());
+                const mi = pad(d.getMinutes());
+                const ss = pad(d.getSeconds());
+                return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+            }
+            function writePicked() {
+                const lines = state.picked.map(
+                    (entry, idx) => `${idx + 1}. [${formatTimestamp(entry.timestamp)}] ${entry.name}`
+                );
+                els.pickedTA.value = lines.join('\n');
+                if (els.downloadPicked) {
+                    els.downloadPicked.disabled = state.picked.length === 0;
+                }
+                updateCounts();
+            }
+
+            function updateCounts() {
+                els.poolCount.textContent = `In pool: ${state.pool.length}`;
+                els.pickedCount.textContent = `Picked: ${state.picked.length}`;
+                els.start.disabled = state.spinning || state.pool.length === 0;
+                els.stop.disabled = !state.spinning;
+                els.undo.disabled = !state.lastRemoved || state.spinning;
+            }
+
+            function setStatus(msg) {
+                els.status.textContent = msg;
+            }
+
+            function renderStage(text, winner = false) {
+                els.stage.textContent = text || '—';
+                els.stage.classList.remove('flip', 'winner');
+                // force reflow
+                void els.stage.offsetWidth;
+                els.stage.classList.add(winner ? 'winner' : 'flip');
+            }
+
+            function startSpin() {
+                if (state.spinning) return;
+                readPool();
+                if (state.pool.length === 0) {
+                    setStatus('Enter at least one name.');
+                    return;
+                }
+
+                state.spinning = true;
+                updateCounts();
+                toggleEditing(false);
+                setStatus('Spinning...');
+
+                state.intervalId = setInterval(() => {
+                    const i = Math.floor(Math.random() * state.pool.length);
+                    renderStage(state.pool[i], false);
+                }, state.flipMs);
+
+                state.timeoutId = setTimeout(finalizePick, state.durationMs);
+            }
+
+            function finalizePick() {
+                if (!state.spinning) return; // guard
+                clearInterval(state.intervalId);
+                state.intervalId = null;
+
+                // Choose final winner
+                const idx = Math.floor(Math.random() * state.pool.length);
+                const winner = state.pool[idx];
+                renderStage(winner, true);
+
+                if (els.remove.checked) {
+                    const entry = { name: winner, timestamp: new Date() };
+                    state.lastRemoved = entry;
+                    state.pool.splice(idx, 1);
+                    writePool();
+                    state.picked.push(entry);
+                    writePicked();
+                } else {
+                    state.lastRemoved = null;
+                }
+
+                state.spinning = false;
+                updateCounts();
+                toggleEditing(true);
+                setStatus('Winner selected' + (els.remove.checked ? ' and removed from pool.' : '.'));
+            }
+
+            function stopSpin() {
+                if (!state.spinning) return;
+                clearTimeout(state.timeoutId);
+                state.timeoutId = null;
+                finalizePick();
+            }
+
+            function shufflePool() {
+                readPool();
+                for (let i = state.pool.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [state.pool[i], state.pool[j]] = [state.pool[j], state.pool[i]];
+                }
+                writePool();
+                setStatus('List shuffled.');
+            }
+
+            function undoLast() {
+                if (!state.lastRemoved) return;
+                const entry = state.lastRemoved;
+                state.lastRemoved = null;
+                state.pool.push(entry.name);
+                state.picked = state.picked.filter((record) => record !== entry);
+                writePool();
+                writePicked();
+                updateCounts();
+                setStatus(`Restored: ${entry.name}`);
+            }
+
+            function resetAll() {
+                if (!confirm('Clear both lists and reset settings?')) return;
+                state.pool = [];
+                state.picked = [];
+                state.lastRemoved = null;
+                state.spinning = false;
+                els.poolTA.value = '';
+                els.duration.value = 3;
+                els.speed.value = 60;
+                els.remove.checked = true;
+                renderStage('Ready');
+                writePicked();
+                updateCounts();
+                setStatus('Reset complete.');
+                toggleEditing(true);
+            }
+
+            function copyPicked() {
+                navigator.clipboard
+                    .writeText(els.pickedTA.value)
+                    .then(() => setStatus('Copied picked names to clipboard.'))
+                    .catch(() => setStatus('Copy failed.'));
+            }
+            function downloadPicked() {
+                if (!state.picked.length) {
+                    setStatus('No picked names to download.');
+                    return;
+                }
+                const header = ['No', 'Timestamp', 'Name'];
+                const rows = state.picked.map((entry, idx) => [
+                    idx + 1,
+                    formatTimestamp(entry.timestamp),
+                    entry.name,
+                ]);
+                const csv = [header, ...rows]
+                    .map((row) =>
+                        row
+                            .map((value) => `"${String(value ?? '').replace(/"/g, '""')}"`)
+                            .join(',')
+                    )
+                    .join('\n');
+                // Prepend UTF-8 BOM so Excel and other programs detect UTF-8 correctly
+                const bom = '\uFEFF';
+                const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                const stamp = new Date().toISOString().slice(0, 10);
+                link.download = `picked-names-${stamp}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                setStatus('Downloaded picked names as CSV.');
+            }
+
+            function toggleEditing(enabled) {
+                els.poolTA.readOnly = !enabled;
+                els.shuffle.disabled = !enabled;
+                els.reset.disabled = !enabled;
+                els.copyPicked.disabled = !enabled && els.pickedTA.value.length === 0;
+            }
+
+            // Event wiring
+            els.start.addEventListener('click', startSpin);
+            els.stop.addEventListener('click', stopSpin);
+            els.shuffle.addEventListener('click', shufflePool);
+            els.undo.addEventListener('click', undoLast);
+            els.reset.addEventListener('click', resetAll);
+            els.copyPicked.addEventListener('click', copyPicked);
+            els.downloadPicked.addEventListener('click', downloadPicked);
+
+            els.poolTA.addEventListener('input', () => {
+                readPool();
+                setStatus('');
+            });
+            els.duration.addEventListener('change', () => {
+                els.duration.value = clampNum(parseInt(els.duration.value, 10), 1, 60);
+            });
+            els.speed.addEventListener('change', () => {
+                els.speed.value = clampNum(parseInt(els.speed.value, 10), 30, 300);
+            });
+
+            // Keyboard shortcuts: Space/Enter toggles Start/Stop when not typing in a textarea
+            document.addEventListener('keydown', (e) => {
+                const active = document.activeElement;
+                const typing = active && (active.tagName === 'TEXTAREA' || active.tagName === 'INPUT');
+                if (typing) return;
+                if (e.code === 'Space' || e.code === 'Enter') {
+                    e.preventDefault();
+                    if (state.spinning) stopSpin();
+                    else startSpin();
+                }
+            });
+
+            // Initialize counts from any prefilled names
+            readPool();
+        </script>
+    </body>
+</html>

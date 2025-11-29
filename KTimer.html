@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KTimer by prasert@cbs.chula.ac.th</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --fg: #111111;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --cosmic-orange: rgb(220, 20, 60);
+      --timer-font-size: 16vmin; /* increased initial font size */
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 90%;
+      margin: 0 auto;
+      width: 100%;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: 100%;
+    }
+
+    .display {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      padding: 12px;
+      min-height: 160px;
+    }
+    .digits {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Roboto Mono", monospace;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.005em;
+      line-height: 1;
+      font-weight: 500;
+      font-size: var(--timer-font-size);
+      color: var(--fg);
+      transform-origin: center;
+    }
+
+    .digits.alerting {
+      color: var(--cosmic-orange);
+      animation: pulse 1s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.06); opacity: .85; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .panel {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+    label { font-weight: 600; color: var(--muted); }
+    .chime-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: var(--fg);
+    }
+
+    input[type="text"], input[type="time"] {
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 16px;
+      outline: none;
+    }
+    input[type="text"]:focus, input[type="time"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }
+
+    .btn {
+      height: 40px;
+      padding: 0 14px;
+      border: 1px solid #d1d5db;
+      background: #f8fafc;
+      color: #111;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform .05s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .btn:hover { background: #eef2ff; }
+    .btn:active { transform: translateY(1px); }
+    .btn[disabled] { opacity: .55; cursor: not-allowed; }
+
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+    .btn.primary:hover { filter: brightness(1.03); }
+    .btn.danger { background: #ef4444; border-color: #ef4444; color: white; }
+
+    .presets { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .help { color: var(--muted); font-size: 14px; }
+    .error { color: #b91c1c; font-weight: 600; }
+
+    @media (max-width: 560px) { .row { flex-direction: column; align-items: stretch; } }
+  </style>
+</head>
+<body>
+  <div class="container" id="container">
+    <div class="display" id="display">
+      <div class="digits" id="readout" role="timer" aria-live="polite" aria-atomic="true" aria-label="Time remaining">00:00</div>
+    </div>
+
+    <div class="panel" aria-label="Timer controls">
+      <div class="row">
+        <label for="deadlineInput">Deadline (hh:mm AM/PM)</label>
+        <input id="deadlineInput" type="text" inputmode="latin" autocomplete="off" placeholder="hh:mm AM/PM" aria-describedby="deadlineHelp" />
+        <button id="showCurrentTimeBtn" class="btn" title="Show the current time (updates every second)" aria-label="Show current time clock">Current Time</button>
+        <button id="startDeadline" class="btn primary">Start</button>
+        <button id="stopBtn" class="btn danger" hidden>Stop / Reset</button>
+      </div>
+      <!-- <div id="deadlineHelp" class="help">Example: <em>5:55 PM</em>. If that time already passed today, the app rolls to tomorrow (up to 12 hours).</div> -->
+
+      <div class="row">
+        <label>Presets</label>
+        <div class="presets" id="presets">
+          <button class="btn" data-seconds="30" aria-label="Start 30 seconds">30s</button>
+          <button class="btn" data-seconds="60" aria-label="Start 60 seconds">60s</button>
+          <button class="btn" data-seconds="180" aria-label="Start 3 minutes">3m</button>
+          <button class="btn" data-seconds="300" aria-label="Start 5 minutes">5m</button>
+          <button class="btn" data-seconds="420" aria-label="Start 7 minutes">7m</button>
+          <button class="btn" data-seconds="600" aria-label="Start 10 minutes">10m</button>
+          <button class="btn" data-seconds="900" aria-label="Start 15 minutes">15m</button>
+          <button class="btn" data-seconds="1200" aria-label="Start 20 minutes">20m</button>
+          <button class="btn" data-seconds="1500" aria-label="Start 25 minutes">25m</button>
+          <button class="btn" data-seconds="1800" aria-label="Start 30 minutes">30m</button>
+          <button class="btn" data-seconds="3600" aria-label="Start 60 minutes">60m</button>
+          <button class="btn" data-seconds="5400" aria-label="Start 90 minutes">90m</button>
+          <button class="btn" data-seconds="7200" aria-label="Start 120 minutes">120m</button>
+        </div>
+      </div>
+      <div class="row">
+        <label class="chime-toggle" for="chimeToggle">
+          <input id="chimeToggle" type="checkbox" />
+          Play chime when time is up
+        </label>
+      </div>
+      <div class="row"><span id="error" class="error" role="alert" aria-live="assertive"></span></div>
+    </div>
+  </div>
+
+  <audio id="chimeAudio" src="chime.mp3" preload="auto" aria-hidden="true"></audio>
+
+  <script>
+    (function(){
+      const readout = document.getElementById('readout');
+      const display = document.getElementById('display');
+      const startDeadlineBtn = document.getElementById('startDeadline');
+      const stopBtn = document.getElementById('stopBtn');
+      const deadlineInput = document.getElementById('deadlineInput');
+      const showCurrentTimeBtn = document.getElementById('showCurrentTimeBtn');
+      const presetsWrap = document.getElementById('presets');
+      const errorEl = document.getElementById('error');
+      const chimeToggle = document.getElementById('chimeToggle');
+      const chimeAudio = document.getElementById('chimeAudio');
+
+      const ALERT_THRESHOLD_SECONDS = 10;
+      const CHIME_REPEAT_COUNT = 3;
+
+      const MODE_IDLE = 'idle';
+      const MODE_COUNTDOWN = 'countdown';
+      const MODE_CLOCK = 'clock';
+
+      let mode = MODE_IDLE;
+      let rafId = null;
+      let endEpochMs = null;
+      let lastWhole = null;
+      let clockIntervalId = null;
+      let chimeRepeatsRemaining = 0;
+
+      function setFontSize(){
+        const rect = display.getBoundingClientRect();
+        const targetW = rect.width;
+        const targetH = rect.height;
+        const sizeByW = targetW * 0.22; // slightly larger scale
+        const sizeByH = targetH * 0.75;
+        const px = Math.max(48, Math.min(sizeByW, sizeByH));
+        document.documentElement.style.setProperty('--timer-font-size', px + 'px');
+      }
+
+      function clamp(n, min, max){ return Math.min(max, Math.max(min, n)); }
+
+      function formatDuration(totalSec){
+        const s = clamp(Math.floor(totalSec), 0, 359999);
+        if (s >= 3600) {
+          const hrs = Math.floor(s / 3600);
+          const mins = Math.floor((s % 3600) / 60);
+          const secs = s % 60;
+          return String(hrs).padStart(2,'0') + ':' + String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+        } else {
+          const mins = Math.floor(s / 60);
+          const secs = s % 60;
+          return String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+        }
+      }
+
+      function parse12hTime(str){
+        if(!str) return null;
+        const m = str.trim().match(/^(\d{1,2}):(\d{2})\s*([AaPp][Mm])$/);
+        if(!m) return null;
+        let h = parseInt(m[1],10);
+        const min = parseInt(m[2],10);
+        const ap = m[3].toUpperCase();
+        if(min > 59 || h < 1 || h > 12) return null;
+        if(ap === 'PM' && h !== 12) h += 12;
+        if(ap === 'AM' && h === 12) h = 0;
+        const now = new Date();
+        const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, min, 0, 0);
+        if(target <= now) target.setDate(target.getDate() + 1);
+        return target;
+      }
+
+      function setDeadlineFromHM(hours, minutes){
+        const normalizedH = Number.isFinite(hours) ? hours : 0;
+        const normalizedM = Number.isFinite(minutes) ? minutes : 0;
+        const H = Math.max(0, Math.min(23, Math.floor(normalizedH)));
+        const M = Math.max(0, Math.min(59, Math.floor(normalizedM)));
+        const mm = String(M).padStart(2,'0');
+        const ampm = H >= 12 ? 'PM' : 'AM';
+        const h12 = ((H + 11) % 12) + 1;
+        deadlineInput.value = `${h12}:${mm} ${ampm}`;
+        try {
+          deadlineInput.dispatchEvent(new Event('input', { bubbles: true }));
+        } catch (_) {
+          const evt = document.createEvent('Event');
+          evt.initEvent('input', true, false);
+          deadlineInput.dispatchEvent(evt);
+        }
+      }
+
+      function setError(msg){ errorEl.textContent = msg || ''; }
+
+      function setReadoutColorDefault(){
+        readout.style.removeProperty('color');
+      }
+
+      function setReadoutColorAccent(){
+        readout.style.color = 'var(--cosmic-orange)';
+      }
+
+      function setReadoutColorOrange(){
+        readout.style.color = 'orange';
+      }
+
+      function updateReadoutAppearance(whole){
+        // alerting (pulsing) when at or below ALERT_THRESHOLD_SECONDS
+        readout.classList.toggle('alerting', whole <= ALERT_THRESHOLD_SECONDS);
+        if (whole <= ALERT_THRESHOLD_SECONDS) {
+          // final alert color (pulsing via .alerting)
+          setReadoutColorAccent();
+        } else if (whole > ALERT_THRESHOLD_SECONDS && whole < 60) {
+          // warning window: orange (no pulsing)
+          setReadoutColorOrange();
+        } else {
+          // default color
+          setReadoutColorDefault();
+        }
+      }
+
+      function stopChime(){
+        if(!chimeAudio) return;
+        chimeAudio.pause();
+        chimeAudio.currentTime = 0;
+        chimeRepeatsRemaining = 0;
+        chimeAudio.removeEventListener('ended', handleChimeEnded);
+      }
+
+      function playChimeIfEnabled(){
+        if(!chimeAudio || !chimeToggle || !chimeToggle.checked) return;
+        chimeAudio.removeEventListener('ended', handleChimeEnded);
+        chimeRepeatsRemaining = Math.max(0, CHIME_REPEAT_COUNT - 1);
+        chimeAudio.currentTime = 0;
+        const maybePlay = chimeAudio.play();
+        if(maybePlay && typeof maybePlay.catch === 'function'){
+          maybePlay.catch(()=>{});
+        }
+        if(chimeRepeatsRemaining > 0){
+          chimeAudio.addEventListener('ended', handleChimeEnded);
+        }
+      }
+
+      function handleChimeEnded(){
+        if(!chimeAudio) return;
+        if(chimeRepeatsRemaining <= 0){
+          chimeAudio.removeEventListener('ended', handleChimeEnded);
+          return;
+        }
+        chimeRepeatsRemaining -= 1;
+        chimeAudio.currentTime = 0;
+        const maybePlay = chimeAudio.play();
+        if(maybePlay && typeof maybePlay.catch === 'function'){
+          maybePlay.catch(()=>{});
+        }
+        if(chimeRepeatsRemaining <= 0){
+          chimeAudio.removeEventListener('ended', handleChimeEnded);
+        }
+      }
+
+      function updateControlStates(){
+        const isCountdown = mode === MODE_COUNTDOWN;
+        const isClock = mode === MODE_CLOCK;
+        const isActive = isCountdown || isClock;
+        const hasValidDeadline = !!parse12hTime(deadlineInput.value);
+
+        startDeadlineBtn.disabled = isActive || !hasValidDeadline;
+
+        const clockBtnDisabled = isClock;
+        showCurrentTimeBtn.disabled = clockBtnDisabled;
+        showCurrentTimeBtn.setAttribute('aria-disabled', String(showCurrentTimeBtn.disabled));
+
+        deadlineInput.disabled = isActive;
+        Array.from(presetsWrap.querySelectorAll('button')).forEach(b => b.disabled = isActive);
+        stopBtn.hidden = !isActive;
+      }
+
+      function setMode(nextMode){
+        mode = nextMode;
+        updateControlStates();
+      }
+
+      function startDuration(seconds){
+        stopClock();
+        clearCountdown();
+        stopChime();
+        setError('');
+        endEpochMs = Date.now() + Math.max(0, Math.floor(seconds))*1000;
+        lastWhole = null;
+        readout.classList.remove('alerting');
+        setReadoutColorDefault();
+        const initialWhole = Math.max(0, Math.floor(seconds));
+        if(initialWhole <= 0){
+          readout.textContent = '00:00';
+          readout.setAttribute('aria-label', 'Time remaining 00:00');
+          setReadoutColorAccent();
+          clearCountdown();
+          setMode(MODE_IDLE);
+          return;
+        }
+        const formatted = formatDuration(initialWhole);
+        readout.textContent = formatted;
+        readout.setAttribute('aria-label', `Time remaining ${formatted}`);
+        // set color / pulsing based on remaining time
+        updateReadoutAppearance(initialWhole);
+        setMode(MODE_COUNTDOWN);
+        tick();
+      }
+
+      function startDeadline(){
+        if(mode !== MODE_IDLE) return;
+        setError('');
+        const target = parse12hTime(deadlineInput.value);
+        if(!target){ setError('Enter a time like 5:55 PM.'); return; }
+        const remaining = Math.ceil((target.getTime() - Date.now())/1000);
+        if(remaining <= 0){ setError('That time has already passed.'); return; }
+        startDuration(remaining);
+      }
+
+      function tick(){
+        if(mode !== MODE_COUNTDOWN || !endEpochMs) return;
+        const remainingMsRaw = endEpochMs - Date.now();
+        if(remainingMsRaw <= 0){
+          readout.textContent = '00:00';
+          readout.setAttribute('aria-label', 'Time remaining 00:00');
+          readout.classList.remove('alerting');
+          setReadoutColorAccent();
+          playChimeIfEnabled();
+          clearCountdown();
+          setMode(MODE_IDLE);
+          return;
+        }
+        const whole = Math.ceil(remainingMsRaw / 1000);
+        if(whole !== lastWhole){
+          lastWhole = whole;
+          const formatted = formatDuration(whole);
+          readout.textContent = formatted;
+          readout.setAttribute('aria-label', `Time remaining ${formatted}`);
+          // update color & pulsing: orange when 10 < seconds < 60, pulsing when <= 10
+          updateReadoutAppearance(whole);
+        }
+        if(mode === MODE_COUNTDOWN){
+          rafId = requestAnimationFrame(tick);
+        }
+      }
+
+      function clearCountdown(){
+        if(rafId){
+          cancelAnimationFrame(rafId);
+        }
+        rafId = null;
+        endEpochMs = null;
+        lastWhole = null;
+        readout.classList.remove('alerting');
+      }
+
+      function stopClock(){
+        if(clockIntervalId !== null){
+          clearInterval(clockIntervalId);
+          clockIntervalId = null;
+        }
+      }
+
+      function updateClockReadout(){
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        readout.textContent = `${hh}:${mm}:${ss}`;
+        readout.classList.remove('alerting');
+        readout.setAttribute('aria-label', `Current time ${hh}:${mm}:${ss}`);
+        setReadoutColorDefault();
+      }
+
+      function startClock(){
+        stopClock();
+        clearCountdown();
+        stopChime();
+        setError('');
+        setMode(MODE_CLOCK);
+        updateClockReadout();
+        clockIntervalId = window.setInterval(updateClockReadout, 1000);
+      }
+
+      function reset(){
+        stopClock();
+        clearCountdown();
+        stopChime();
+        setMode(MODE_IDLE);
+        readout.textContent = '00:00';
+        setError('');
+        readout.setAttribute('aria-label', 'Time remaining 00:00');
+        setReadoutColorDefault();
+      }
+
+      startDeadlineBtn.addEventListener('click', startDeadline);
+      stopBtn.addEventListener('click', reset);
+
+      presetsWrap.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button[data-seconds]');
+        if(!btn || mode !== MODE_IDLE) return;
+        startDuration(parseInt(btn.dataset.seconds, 10));
+      });
+
+      showCurrentTimeBtn.addEventListener('click', ()=>{
+        if(mode === MODE_CLOCK) return;
+        startClock();
+      });
+
+      deadlineInput.addEventListener('input', ()=>{
+        setError('');
+        updateControlStates();
+      });
+
+      if(chimeToggle){
+        chimeToggle.addEventListener('change', ()=>{
+          if(!chimeToggle.checked){
+            stopChime();
+          }
+        });
+      }
+
+      const ro = new ResizeObserver(setFontSize);
+      ro.observe(display);
+      window.addEventListener('orientationchange', setFontSize);
+      window.addEventListener('load', setFontSize);
+      setMode(MODE_IDLE);
+      setFontSize();
+    })();
+  </script>
+</body>
+</html>

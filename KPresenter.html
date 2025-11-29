@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KPresenter by prasert@cbs.chula.ac.th</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --accent: #2db0ff;
+      --accent-orange: #FF9800;
+      --bg: #1e2125;
+      --bg-card: #282c34;
+      --fg: #f5f6fa;
+      --subdue: #b3b6be;
+      --danger: #ff4081;
+      --reset-crimson: #DC143C;
+      --border-radius: 14px;
+      --shadow: 0 2px 12px 0 rgba(20,20,40,0.11);
+      --transition: 0.23s cubic-bezier(.4,0,.2,1);
+    }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+    }
+    header {
+      text-align: center;
+      padding: 2rem 1rem 1rem 1rem;
+    }
+    h1 {
+      margin: 0 0 0.5rem;
+      font-size: 2.1rem;
+      color: var(--accent);
+    }
+    .desc {
+      margin-bottom: 0.9rem;
+      color: var(--subdue);
+    }
+    .file-loader {
+      margin: 1.5rem auto;
+      text-align: center;
+      max-width: 430px;
+      background: var(--bg-card);
+      border-radius: var(--border-radius);
+      padding: 1.3rem 1.5rem 1rem 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    .file-loader label {
+      font-size: 1.05rem;
+      color: var(--subdue);
+      margin-bottom: 0.6rem;
+      display: block;
+    }
+    main {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 2.4rem 2.6rem;
+      padding: 10px 12px 65px 12px;
+      min-height: 55vh;
+    }
+    .section {
+      min-width: 260px;
+      background: var(--bg-card);
+      border-radius: var(--border-radius);
+      margin-bottom: 1.4rem;
+      box-shadow: var(--shadow);
+      flex: 1 1 340px;
+      max-width: 455px;
+      padding: 1.4rem 1.2rem 1.3rem 1.2rem;
+    }
+    .section :is(h2,h3) {
+      margin-top: 0;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 1.1rem;
+      letter-spacing: 0.05em;
+    }
+    .roulette {
+      position: relative;
+      min-height: 70px;
+      height: 67px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.4rem;
+      margin-top: 0.3rem;
+      font-size: 2.1rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      border-radius: 11px;
+      background: #23272e;
+      box-shadow: 0 2px 8px 0 rgba(60,70,100,0.16);
+      overflow: hidden;
+      transition: box-shadow var(--transition);
+    }
+    .roulette.spinning {
+      animation: pulse 0.7s infinite;
+      filter: blur(1.5px) brightness(1.1);
+    }
+    #teamRoulette.roulette.final { color: var(--accent-orange); border-color: var(--accent-orange);}
+    #memberRoulette.roulette.final { color: var(--accent); border-color: var(--accent);}
+    .roulette.final {
+      background: #181c22;
+      animation: pop .32s cubic-bezier(.6,0,0,1.4);
+      filter: none;
+      box-shadow: 0 0 0 5px rgba(30,200,255,0.11), var(--shadow);
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 5px var(--accent); }
+      100% { box-shadow: 0 0 15px var(--accent); }
+    }
+    @keyframes pop {
+      0% { transform: scale(0.82);}
+      80% { transform: scale(1.14);}
+      100% { transform: scale(1);}
+    }
+    .roulette .progress {
+      position: absolute;
+      left: 0; top: 0; height: 4px; width: 100%;
+      background: linear-gradient(90deg, var(--accent) var(--prog, 60%), transparent 0%);
+      border-radius: 4px;
+      transition: width 0.2s linear;
+    }
+    .teams-list, .members-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7em;
+      margin-bottom: 0.8rem;
+      min-height: 38px;
+    }
+    .team-card, .member-chip {
+      padding: 0.52em 1.05em;
+      border-radius: var(--border-radius);
+      background: #22262d;
+      color: var(--fg);
+      font-size: 1rem;
+      box-shadow: 0 1px 4px 0 rgba(30,50,52,0.08);
+      transition: box-shadow var(--transition), border var(--transition), color var(--transition), background var(--transition), opacity var(--transition), filter var(--transition);
+      cursor: pointer;
+      outline: none;
+      border: 2px solid transparent;
+      opacity: 0.86;
+    }
+    .team-card.selected, .member-chip.selected {
+      background: var(--accent);
+      color: #fff;
+      opacity: 1;
+      border: 2px solid #fff;
+      font-weight: 600;
+      box-shadow: 0 1.5px 8px 0 rgba(35,200,255,0.19);
+    }
+    .team-card:not(.selected) { opacity: 0.60; }
+    .member-chip:not(.selected) { background: #25282d; color: var(--subdue); }
+    .team-card:focus, .member-chip:focus {
+      border: 2px solid var(--accent);
+      filter: brightness(1.12);
+      z-index: 2;
+    }
+    .team-card.unavailable, .member-chip.unavailable {
+      color: #999 !important;
+      background: repeating-linear-gradient(
+        135deg, #444 0 8px, #363636 8px 16px
+      ) !important;
+      opacity: 0.47 !important;
+      cursor: not-allowed;
+      filter: grayscale(0.6) blur(0.3px);
+      box-shadow: none !important;
+      border: 2px dashed #656;
+      text-decoration: line-through;
+      pointer-events: none;
+      position: relative;
+    }
+    .team-card.unavailable.selected, .member-chip.unavailable.selected {
+      filter: grayscale(0.9) blur(0.3px) brightness(0.93);
+      background: repeating-linear-gradient(
+        135deg, #636464 0 10px, #3b3b41 10px 20px
+      ) !important;
+      color: #a4a4a4 !important;
+      opacity: 0.61 !important;
+      border-color: #d36 !important;
+    }
+    .team-card.unavailable::after, .member-chip.unavailable::after {
+      content: "🚫";
+      position: absolute;
+      top: 5px; right: 6px;
+      font-size: 1.12em;
+      pointer-events: none;
+      opacity: 0.88;
+    }
+    .controls { display: flex; gap: 0.92em; margin-top: 0.2em; }
+    .controls button {
+      padding: 0.54em 1.26em;
+      font-size: 1.08rem;
+      border-radius: 12px;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 1.2px 8px 0 rgba(25,120,220,0.10);
+      transition: background 0.14s;
+    }
+    #spinTeamBtn {
+      background: var(--accent-orange) !important;
+    }
+    .controls button:disabled {
+      background: #22262d !important;
+      color: #98a9b8 !important;
+      cursor: not-allowed;
+      filter: grayscale(0.3);
+    }
+    .controls .reset-btn {
+      background: var(--reset-crimson) !important;
+    }
+    .settings input[type=range] {
+      width: 90px; vertical-align: middle;
+      margin-right: 8px;
+    }
+    .settings label {
+      margin-right: 1.3em;
+      color: var(--subdue);
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .settings input[type=number] {
+      width: 2.9em;
+      padding: 0.12em 0.2em;
+    }
+    .settings input[type=checkbox] {
+      vertical-align: middle;
+      transform: scale(1.14);
+      margin-right: 0.31em;
+    }
+    .settings { font-size: 0.97rem; color: var(--subdue); margin: 0.44em 0 0.5em 0;}
+    .history-table {
+      width: 100%;
+      background: transparent;
+      border-collapse: collapse;
+      margin-top: 0.8em;
+    }
+    .history-table th, .history-table td {
+      padding: 0.38em 0.65em;
+      text-align: left;
+      font-size: 0.98em;
+    }
+    .history-table th {
+      background: #20242a; color: #aef;
+      border-bottom: 2px solid var(--accent);
+    }
+    .history-table tbody tr:hover {
+      background: #293e52;
+      cursor: pointer;
+    }
+    .history-table td {
+      border-bottom: 1px solid #323c45;
+      color: var(--fg);
+    }
+    .export-btn {
+      display: inline-block;
+      margin-top: 0.4em;
+      padding: 0.32em 1.01em;
+      font-size: 0.99em;
+      border-radius: 8px;
+      border: none;
+      background: #238fe0;
+      color: #fff;
+      cursor: pointer;
+      float: right;
+    }
+    .toast {
+      position: fixed;
+      top: 26px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--danger);
+      color: #fff;
+      padding: 0.74em 1.51em;
+      border-radius: 13px;
+      font-size: 1.11em;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(255,0,50,0.11);
+      animation: fade-in .21s cubic-bezier(.4,0,.2,1);
+      pointer-events: none;
+    }
+    @keyframes fade-in {
+      from { opacity: 0; top: 18px;}
+      to   { opacity: 1; top: 26px;}
+    }
+    @media (max-width: 760px) {
+      main { flex-direction: column; align-items: stretch; }
+      .section { max-width: 100vw; }
+      .file-loader { max-width: 98vw;}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Team & Member Roulette Picker</h1>
+  <div class="desc">Randomly pick a team, then a member in that team. Fun for groups, activities, and fair rotation!</div>
+</header>
+
+<div class="file-loader" id="fileLoader">
+  <label for="fileInput">Load team CSV (<b>team,member</b>):</label>
+  <input type="file" id="fileInput" accept=".csv" />
+  <button type="button" id="useSampleBtn">Use sample data</button>
+  <div style="margin-top:0.7em;">
+    <textarea id="csvPaste" rows="3" placeholder="Paste CSV here (optional)" style="width:94%;font-size:1em;border-radius:8px;padding:0.4em;margin-top:0.4em;"></textarea>
+    <button type="button" id="loadPasteBtn">Load pasted CSV</button>
+  </div>
+  <div id="loadStatus" style="margin-top:0.6em;font-size:1em;color:var(--subdue);"></div>
+</div>
+
+<main>
+  <div class="section" id="teamsSection">
+    <h2>Teams</h2>
+    <div class="roulette" id="teamRoulette"><span id="teamRouletteText">Load data to begin</span><div class="progress" id="teamProgress"></div></div>
+    <div class="teams-list" id="teamsList"></div>
+    <div class="controls">
+      <button id="spinTeamBtn" title="Pick team only">Spin Team</button>
+    </div>
+  </div>
+  <div class="section" id="membersSection">
+    <h2>Members</h2>
+    <div class="roulette" id="memberRoulette"><span id="memberRouletteText">Pick a team above</span><div class="progress" id="memberProgress"></div></div>
+    <div class="members-list" id="membersList"></div>
+    <div class="controls">
+      <button id="spinMemberBtn" title="Pick member for selected team">Spin Member</button>
+      <button id="resetBtn" class="reset-btn" style="margin-left:1em;">Reset</button>
+    </div>
+    <div class="settings">
+      <label>Team spin: 
+        <input type="range" min="1" max="8" id="teamDuration" value="3" />
+        <input type="number" min="1" max="8" id="teamDurationN" value="3" />s
+      </label><br/>
+      <label>Member spin: 
+        <input type="range" min="1" max="8" id="memberDuration" value="3" />
+        <input type="number" min="1" max="8" id="memberDurationN" value="3" />s
+      </label><br/>
+      <label><input type="checkbox" id="avoidRepeatTeam" checked />No repeat team</label><br/>
+      <label><input type="checkbox" id="avoidRepeatMember" checked />No repeat member (in team)</label>
+    </div>
+  </div>
+  <div class="section" id="historySection">
+    <h2>Draw History</h2>
+    <table class="history-table" id="historyTable">
+      <thead><tr><th>#</th><th>Time</th><th>Team</th><th>Member</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <button class="export-btn" id="exportBtn">Export history CSV</button>
+  </div>
+</main>
+<div class="toast" style="display:none;" id="toast"></div>
+<script>
+const SAMPLE_CSV = `team,member
+coffee,espresso
+coffee,americano
+coffee,cappuccino
+coffee,latte
+coffee,mocha
+tea,earl grey
+tea,jasmine
+tea,matcha
+tea,yuzu
+tea,oolong
+tea,thai iced tea
+soda,cola
+soda,lemon soda
+soda,orange soda
+bakery,croissant
+bakery,muffin
+bakery,banana bread`;
+
+function showToast(msg, ms=2100) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.style.display = 'block';
+  setTimeout(()=>{ toast.style.display='none'; }, ms);
+}
+function uniqId() { return Math.random().toString(36).slice(2,9) + Date.now().toString(32); }
+function nowStr() {
+  const d = new Date();
+  return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})+' '+d.toLocaleDateString();
+}
+
+let data = {
+  teams: [],
+  members: {},
+};
+let state = {
+  selectedTeamId: null,
+  selectedMemberId: null,
+  teamRollDuration: 3,
+  memberRollDuration: 3,
+  avoidRepeatTeam: false,
+  avoidRepeatMember: false,
+  lastTeamId: null,
+  lastMemberId: {},
+  drawHistory: [],
+  maxHistory: 30,
+  usedMemberIds: new Set(),
+  usedTeamIds: new Set(),
+};
+
+// Updated parser that inserts headers if missing or incomplete
+function parseCsv(text) {
+  let rows = text.trim().replace(/\r/g,'').split('\n').map(x=>x.split(','));
+  // (1) Add headers if *any* missing
+  let headersRaw = rows[0].map(x => x.trim().toLowerCase());
+  // If neither "team" nor "member" in headers, try to infer
+  if ((headersRaw.indexOf("team") === -1 && headersRaw.indexOf("member") === -1) || rows.length === 1) {
+    // If only one column in data, treat as "team"
+    if (rows[0].length === 1) {
+      rows.unshift(["team"]);
+    }
+    // If two columns, treat as "team,member"
+    else if (rows[0].length === 2) {
+      rows.unshift(["team", "member"]);
+    }
+    headersRaw = rows[0].map(x => x.trim().toLowerCase());
+  }
+
+  let tIdx = headersRaw.indexOf('team');
+  let mIdx = headersRaw.indexOf('member');
+  // If only "team" column, treat "member" as same as "team"
+  if (tIdx !== -1 && mIdx === -1) {
+    headersRaw.push('member');
+    mIdx = headersRaw.length - 1;
+    for (let i = 1; i < rows.length; ++i) {
+      rows[i][mIdx] = rows[i][tIdx];
+    }
+  }
+  if (tIdx === -1 || mIdx === -1) return null;
+
+  let teams = [], teamsByName = {}, members = {};
+  for(let i=1; i<rows.length; ++i){
+    let t = rows[i][tIdx] ? rows[i][tIdx].trim() : '';
+    let m = rows[i][mIdx] ? rows[i][mIdx].trim() : '';
+    if(!t || !m) continue;
+    if(!teamsByName[t]){ teamsByName[t] = {id:uniqId(), name:t, members:[]}; teams.push(teamsByName[t]);}
+    let mem = {id:uniqId(), name:m, teamId:teamsByName[t].id};
+    teamsByName[t].members.push(mem);
+    members[mem.id] = mem;
+  }
+  return {teams, members};
+}
+// (The rest of the JS is unchanged)
+function loadData(newData){
+  data = newData;
+  state.selectedTeamId = null;
+  state.selectedMemberId = null;
+  state.drawHistory = [];
+  state.lastTeamId = null;
+  state.lastMemberId = {};
+  state.usedMemberIds = new Set();
+  state.usedTeamIds = new Set();
+  document.getElementById('loadStatus').textContent = `Loaded ${data.teams.length} teams, ${Object.keys(data.members).length} members`;
+  renderTeams();
+  renderMembers();
+  renderHistory();
+  renderRoulette(null, 'team');
+  renderRoulette(null, 'member');
+}
+
+window.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('csvPaste').value = SAMPLE_CSV;
+  document.getElementById('fileInput').addEventListener('change', (e)=>{
+    if(e.target.files.length>0){
+      let reader = new FileReader();
+      reader.onload = evt => {
+        let parsed = parseCsv(evt.target.result);
+        if(parsed) loadData(parsed);
+        else showToast('File format error: need team/member columns');
+      };
+      reader.readAsText(e.target.files[0], 'utf-8');
+    }
+  });
+  document.getElementById('useSampleBtn').onclick = ()=>{
+    let parsed = parseCsv(SAMPLE_CSV);
+    loadData(parsed);
+  };
+  document.getElementById('loadPasteBtn').onclick = ()=>{
+    let txt = document.getElementById('csvPaste').value;
+    let parsed = parseCsv(txt);
+    if(parsed) loadData(parsed);
+    else showToast('Paste error: input must have team column');
+  };
+  ['teamDuration','teamDurationN','memberDuration','memberDurationN'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', (e)=>{
+      let v = Math.max(1, Math.min(8, Number(e.target.value)));
+      state[id.includes('team')?'teamRollDuration':'memberRollDuration'] = v;
+      document.getElementById(id.includes('team')?'teamDuration':'memberDuration').value = v;
+      document.getElementById(id.includes('team')?'teamDurationN':'memberDurationN').value = v;
+      saveSettings();
+    });
+  });
+  document.getElementById('avoidRepeatTeam').onchange = (e)=>{state.avoidRepeatTeam = e.target.checked; saveSettings();};
+  document.getElementById('avoidRepeatMember').onchange = (e)=>{state.avoidRepeatMember = e.target.checked; saveSettings();};
+  document.getElementById('spinTeamBtn').onclick = ()=>spinRoulette('team');
+  document.getElementById('spinMemberBtn').onclick = ()=>spinRoulette('member');
+  document.getElementById('resetBtn').onclick = ()=>{ 
+    state.selectedTeamId = state.selectedMemberId = null; 
+    state.usedMemberIds = new Set();
+    state.usedTeamIds = new Set();
+    renderTeams(); renderMembers(); renderRoulette(null,'team'); renderRoulette(null,'member'); 
+  };
+  document.getElementById('exportBtn').onclick = exportHistory;
+  restoreSettings();
+  loadData(parseCsv(SAMPLE_CSV));
+});
+
+function saveSettings(){
+  localStorage.setItem('teamPickerSettings', JSON.stringify({
+    teamRollDuration: state.teamRollDuration,
+    memberRollDuration: state.memberRollDuration,
+    avoidRepeatTeam: state.avoidRepeatTeam,
+    avoidRepeatMember: state.avoidRepeatMember
+  }));
+}
+function restoreSettings(){
+  try {
+    let s = JSON.parse(localStorage.getItem('teamPickerSettings')) || {};
+    if(s.teamRollDuration) state.teamRollDuration = Number(s.teamRollDuration);
+    if(s.memberRollDuration) state.memberRollDuration = Number(s.memberRollDuration);
+    state.avoidRepeatTeam = !!s.avoidRepeatTeam;
+    state.avoidRepeatMember = !!s.avoidRepeatMember;
+    document.getElementById('teamDuration').value = state.teamRollDuration;
+    document.getElementById('teamDurationN').value = state.teamRollDuration;
+    document.getElementById('memberDuration').value = state.memberRollDuration;
+    document.getElementById('memberDurationN').value = state.memberRollDuration;
+    document.getElementById('avoidRepeatTeam').checked = !!state.avoidRepeatTeam;
+    document.getElementById('avoidRepeatMember').checked = !!state.avoidRepeatMember;
+  } catch { }
+}
+function renderTeams(){
+  let L = document.getElementById('teamsList');
+  L.innerHTML = '';
+  data.teams.forEach(team=>{
+    let unavailable = state.usedTeamIds.has(team.id);
+    let d = document.createElement('div');
+    d.tabIndex = unavailable ? -1 : 0;
+    d.className = 'team-card'+(team.id===state.selectedTeamId?' selected':'')+(unavailable?' unavailable':'');
+    d.textContent = team.name+` (${team.members.length})`;
+    d.title = unavailable ? 'Team already drawn (unavailable)' : team.name;
+    if(!unavailable) {
+      d.onclick = ()=>{ state.selectedTeamId=team.id; state.selectedMemberId=null; renderTeams(); renderMembers(); renderRoulette(team.name, 'team'); renderRoulette(null,'member');};
+      d.onkeyup = function(e){if(e.key==='Enter'){d.onclick();}};
+    }
+    L.appendChild(d);
+  });
+}
+function renderMembers(){
+  let M = document.getElementById('membersList');
+  M.innerHTML = '';
+  let team = data.teams.find(t=>t.id===state.selectedTeamId);
+  if(!team){ M.innerHTML = '<span style="color:var(--subdue)">Pick a team to view members.</span>'; return;}
+  team.members.forEach(mem=>{
+    let unavailable = state.usedMemberIds.has(mem.id);
+    let d = document.createElement('div');
+    d.tabIndex = unavailable ? -1 : 0;
+    d.className = 'member-chip'+(mem.id===state.selectedMemberId?' selected':'')+(unavailable?' unavailable':'');
+    d.textContent = mem.name;
+    d.title = unavailable ? 'Already picked (unavailable)' : mem.name;
+    if(!unavailable) {
+      d.onclick = ()=>{
+        state.selectedMemberId = mem.id;
+        state.usedMemberIds.add(mem.id);
+        state.usedTeamIds.add(team.id);
+        appendHistory(team.name, mem.name, mem.id, team.id);
+        confetti();
+        renderMembers();
+        renderTeams();
+        renderRoulette(mem.name, 'member');
+      };
+      d.onkeyup = function(e){if(e.key==='Enter'){d.onclick();}};
+    }
+    M.appendChild(d);
+  });
+}
+function renderRoulette(val, which, progress=1, spinning=false){
+  let txt = document.getElementById(which==='team'?'teamRouletteText':'memberRouletteText');
+  let box = document.getElementById(which==='team'?'teamRoulette':'memberRoulette');
+  let progElm = document.getElementById(which==='team'?'teamProgress':'memberProgress');
+  if(spinning){
+    box.classList.add('spinning');
+    box.classList.remove('final');
+    progElm.style.setProperty('--prog', Math.round(progress*100)+'%');
+    progElm.style.display = '';
+    txt.textContent = val;
+  } else if(val){
+    box.classList.remove('spinning');
+    box.classList.add('final');
+    txt.textContent = val;
+    progElm.style.display = 'none';
+  } else {
+    box.classList.remove('spinning');
+    box.classList.remove('final');
+    progElm.style.display = 'none';
+    txt.textContent = which==='team' ? (data.teams.length?'Pick a team or Spin!':'Load data to begin') :
+      (state.selectedTeamId?'Pick member or Spin!':'Pick a team above');
+  }
+}
+function spinRoulette(mode){
+  if(!data.teams.length){ showToast('Load a valid CSV first'); return;}
+  if(mode==='team'){
+    let validTeams = data.teams.filter(t=>!state.usedTeamIds.has(t.id));
+    if(state.avoidRepeatTeam && validTeams.length>1)
+      validTeams = validTeams.filter(t=>t.id!==state.selectedTeamId);
+    if(!validTeams.length) { showToast('No teams left to pick'); return;}
+    let i = Math.floor(Math.random()*validTeams.length);
+    let target = validTeams[i];
+    let rollMs = state.teamRollDuration*1000, steps=rollMs/55, idx=0;
+    state.selectedTeamId = null;
+    let spinInterval = setInterval(()=>{
+      let fakeIdx = Math.floor(Math.random()*validTeams.length);
+      let fakeTeam = validTeams[fakeIdx];
+      renderRoulette(fakeTeam ? fakeTeam.name : "", 'team', (idx+1)/steps, true);
+      idx++;
+      if(idx>=steps){
+        clearInterval(spinInterval);
+        state.selectedTeamId = target.id;
+        renderRoulette(target.name, 'team', 1, false);
+        renderTeams(); renderMembers();
+      }
+    },55);
+  } else if (mode==='member'){
+    let team = data.teams.find(t=>t.id===state.selectedTeamId);
+    if(!team){ showToast('Pick a team first');return;}
+    let validMembers = team.members.filter(m=>!state.usedMemberIds.has(m.id));
+    if(state.avoidRepeatMember && validMembers.length>1){
+      let lastMid = state.lastMemberId[team.id];
+      validMembers = validMembers.filter(m=>m.id!==lastMid);
+    }
+    if(!validMembers.length){ showToast('No members left to pick in this team!'); return;}
+    let i = Math.floor(Math.random()*validMembers.length);
+    let target = validMembers[i];
+    let rollMs = state.memberRollDuration*1000, steps=rollMs/50, idx=0;
+    state.selectedMemberId = null;
+    let spinInterval = setInterval(()=>{
+      let fakeIdx = Math.floor(Math.random()*validMembers.length);
+      let fakeName = validMembers[fakeIdx] ? validMembers[fakeIdx].name : "";
+      renderRoulette(fakeName, 'member', (idx+1)/steps, true);
+      idx++;
+      if(idx>=steps){
+        clearInterval(spinInterval);
+        state.selectedMemberId = target.id;
+        renderRoulette(target.name, 'member', 1, false);
+        renderMembers();
+        state.lastTeamId = state.selectedTeamId;
+        state.lastMemberId[team.id] = target.id;
+        state.usedTeamIds.add(team.id);
+        appendHistory(team.name, target.name, target.id, team.id);
+        confetti();
+        renderTeams();
+      }
+    },50);
+  }
+}
+function appendHistory(team, member, memberId=null, teamId=null){
+  state.drawHistory.unshift({
+    time: nowStr(),
+    team, member
+  });
+  if(state.drawHistory.length>state.maxHistory)
+    state.drawHistory.pop();
+  if(memberId) state.usedMemberIds.add(memberId);
+  renderTeams();
+  renderMembers();
+  renderHistory();
+}
+function renderHistory(){
+  let tb = document.querySelector('#historyTable tbody');
+  tb.innerHTML = '';
+  state.drawHistory.forEach((r,i)=>{
+    let tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td>${r.time}</td><td>${r.team}</td><td>${r.member}</td>`;
+    tr.onclick = ()=>{
+      let t = data.teams.find(t=>t.name===r.team);
+      let m = t && t.members.find(mem=>mem.name===r.member);
+      state.selectedTeamId = t ? t.id : null;
+      state.selectedMemberId = m ? m.id : null;
+      renderTeams(); renderMembers();
+      renderRoulette(r.team, 'team');
+      renderRoulette(r.member, 'member');
+    };
+    tb.appendChild(tr);
+  });
+}
+function exportHistory(){
+  if(!state.drawHistory.length){showToast('No history to export');return;}
+  function esc(s){
+    if(s==null) return '';
+    s = String(s);
+    if(/["\r\n,]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+    return s;
+  }
+  let rows = ['No,Time,Team,Member'];
+  state.drawHistory.slice().reverse().forEach((r,i)=>rows.push(`${i+1},${esc(r.time)},${esc(r.team)},${esc(r.member)}`));
+  let csv = rows.join('\r\n');
+  const bom = '\uFEFF'; // UTF-8 BOM
+  const blob = new Blob([bom + csv], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'draw-history-'+(new Date().toISOString().replace(/:/g, '').slice(0,17))+'.csv';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+function confetti(){
+  let n = 22;
+  let center = document.body;
+  for(let i=0;i<n;++i){
+    let e = document.createElement('div');
+    let clr = ['#2db0ff','#ffe27a','#ff4081','#9ff659','#fe7575'][i%5];
+    let s = Math.random()*0.32+0.18;
+    e.style.cssText = `position:fixed;pointer-events:none;z-index:2000;left:50vw;top:49vh;width:17px;height:17px;opacity:0.96;transform:scale(${s});transition:all 1.34s cubic-bezier(.61,0,.61,1);background:${clr};border-radius:50%`;
+    setTimeout(()=>{
+      e.style.left = (50+Math.floor(Math.random()*52-26))+'vw';
+      e.style.top = (55+Math.random()*18)+'vh';
+      e.style.opacity = 0;
+      e.style.transform = `scale(${s*1.3}) rotate(${Math.random()*260}deg)`;
+    },0);
+    setTimeout(()=>center.removeChild(e),1300);
+    center.appendChild(e);
+  }
+}
+</script>
+</body>
+</html>
