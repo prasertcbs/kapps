@@ -304,12 +304,12 @@
 </header>
 
 <div class="file-loader" id="fileLoader">
-  <label for="fileInput">Load team CSV (<b>team,member</b>):</label>
-  <input type="file" id="fileInput" accept=".csv" />
+  <label for="fileInput">Load team CSV/TSV (<b>team,member</b> or <b>team[TAB]member</b>):</label>
+  <input type="file" id="fileInput" accept=".csv,.tsv" />
   <button type="button" id="useSampleBtn">Use sample data</button>
   <div style="margin-top:0.7em;">
-    <textarea id="csvPaste" rows="3" placeholder="Paste CSV here (optional)" style="width:94%;font-size:1em;border-radius:8px;padding:0.4em;margin-top:0.4em;"></textarea>
-    <button type="button" id="loadPasteBtn">Load pasted CSV</button>
+    <textarea id="csvPaste" rows="3" placeholder="Paste CSV/TSV here (optional)" style="width:94%;font-size:1em;border-radius:8px;padding:0.4em;margin-top:0.4em;"></textarea>
+    <button type="button" id="loadPasteBtn">Load pasted CSV/TSV</button>
   </div>
   <div id="loadStatus" style="margin-top:0.6em;font-size:1em;color:var(--subdue);"></div>
 </div>
@@ -405,9 +405,17 @@ let state = {
   usedTeamIds: new Set(),
 };
 
-// Updated parser that inserts headers if missing or incomplete
+// Updated parser that auto-detects CSV or TSV and inserts headers if missing or incomplete
 function parseCsv(text) {
-  let rows = text.trim().replace(/\r/g,'').split('\n').map(x=>x.split(','));
+  // Detect if the input contains tabs (TSV) or commas (CSV) in the first line
+  const firstLine = text.trim().split('\n')[0];
+  const hasTabs = firstLine.includes('\t');
+  const hasCommas = firstLine.includes(',');
+
+  // Use tab separator for TSV, comma for CSV
+  const separator = hasTabs ? '\t' : ',';
+
+  let rows = text.trim().replace(/\r/g,'').split('\n').map(x=>x.split(separator));
   // (1) Add headers if *any* missing
   let headersRaw = rows[0].map(x => x.trim().toLowerCase());
   // If neither "team" nor "member" in headers, try to infer
@@ -473,7 +481,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
       reader.onload = evt => {
         let parsed = parseCsv(evt.target.result);
         if(parsed) loadData(parsed);
-        else showToast('File format error: need team/member columns');
+        else showToast('File format error: need team/member columns (supports both CSV and TSV)');
       };
       reader.readAsText(e.target.files[0], 'utf-8');
     }
@@ -486,7 +494,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
     let txt = document.getElementById('csvPaste').value;
     let parsed = parseCsv(txt);
     if(parsed) loadData(parsed);
-    else showToast('Paste error: input must have team column');
+    else showToast('Paste error: input must have team column (supports both CSV and TSV)');
   };
   ['teamDuration','teamDurationN','memberDuration','memberDurationN'].forEach(id=>{
     document.getElementById(id).addEventListener('input', (e)=>{

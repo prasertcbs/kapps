@@ -190,10 +190,29 @@
     function parseInput() {
       const text = document.getElementById('studentText').value.trim();
       if (text) {
-        return text
+        // Detect if the input contains tabs (TSV) or commas (CSV)
+        const firstLine = text.split('\n')[0];
+        const hasTabs = firstLine.includes('\t');
+        const hasCommas = firstLine.includes(',');
+
+        let parsedData = text
           .split('\n')
-          .map(row => row.split(',').map(field => field.trim()))
-          .filter(arr => arr.length >= 2 && arr[0] && arr[1]);
+          .map(row => {
+            // Use tab separator for TSV, comma for CSV
+            const separator = hasTabs ? '\t' : ',';
+            return row.split(separator).map(field => field.trim());
+          })
+          .filter(arr => arr.length >= 1 && arr[0]); // At least one field is required
+
+        // If all rows have only one column, treat it as names and assign sequential IDs
+        if (parsedData.every(row => row.length === 1)) {
+          parsedData = parsedData.map((row, index) => [String(index + 1), row[0]]);
+        } else {
+          // For multi-column data, filter rows that have at least 2 columns
+          parsedData = parsedData.filter(arr => arr.length >= 2 && arr[0] && arr[1]);
+        }
+
+        return parsedData;
       }
       return [];
     }

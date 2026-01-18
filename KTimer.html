@@ -139,6 +139,12 @@
       <!-- <div id="deadlineHelp" class="help">Example: <em>5:55 PM</em>. If that time already passed today, the app rolls to tomorrow (up to 12 hours).</div> -->
 
       <div class="row">
+        <label for="minutesInput">Minutes</label>
+        <input id="minutesInput" type="number" min="1" max="999" value="5" inputmode="numeric" style="width: 100px;" aria-describedby="minutesHelp" />
+        <button id="setMinutesBtn" class="btn" aria-label="Set minutes">Set Minutes</button>
+        <span id="minutesHelp" class="help">Enter minutes (1-999)</span>
+      </div>
+      <div class="row">
         <label>Presets</label>
         <div class="presets" id="presets">
           <button class="btn" data-seconds="30" aria-label="Start 30 seconds">30s</button>
@@ -180,6 +186,8 @@
       const errorEl = document.getElementById('error');
       const chimeToggle = document.getElementById('chimeToggle');
       const chimeAudio = document.getElementById('chimeAudio');
+      const minutesInput = document.getElementById('minutesInput');
+      const setMinutesBtn = document.getElementById('setMinutesBtn');
 
       const ALERT_THRESHOLD_SECONDS = 10;
       const CHIME_REPEAT_COUNT = 3;
@@ -336,6 +344,8 @@
         showCurrentTimeBtn.setAttribute('aria-disabled', String(showCurrentTimeBtn.disabled));
 
         deadlineInput.disabled = isActive;
+        minutesInput.disabled = isActive;
+        setMinutesBtn.disabled = isActive;
         Array.from(presetsWrap.querySelectorAll('button')).forEach(b => b.disabled = isActive);
         stopBtn.hidden = !isActive;
       }
@@ -456,6 +466,7 @@
         setError('');
         readout.setAttribute('aria-label', 'Time remaining 00:00');
         setReadoutColorDefault();
+        minutesInput.value = '5'; // Reset to default value
       }
 
       startDeadlineBtn.addEventListener('click', startDeadline);
@@ -465,6 +476,22 @@
         const btn = e.target.closest('button[data-seconds]');
         if(!btn || mode !== MODE_IDLE) return;
         startDuration(parseInt(btn.dataset.seconds, 10));
+      });
+
+      setMinutesBtn.addEventListener('click', () => {
+        if(mode !== MODE_IDLE) return;
+        const minutes = parseInt(minutesInput.value, 10);
+        if(isNaN(minutes) || minutes <= 0) {
+          setError('Please enter a valid number of minutes.');
+          return;
+        }
+        startDuration(minutes * 60);
+      });
+
+      minutesInput.addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') {
+          setMinutesBtn.click();
+        }
       });
 
       showCurrentTimeBtn.addEventListener('click', ()=>{
