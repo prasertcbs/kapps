@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seating Chart Generator</title>
+    <title>Max Distance Seating Chart Generator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -183,11 +183,37 @@
             width: 0%;
             transition: width 0.1s ease;
         }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .kpi-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .kpi-label {
+            font-size: 1em;
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎯 Seating Chart Generator</h1>
+        <h1>🎯 Max Distance Seating Chart Generator</h1>
+
+        <div class="kpi-card">
+            <div class="kpi-label">STUDENTS COUNT</div>
+            <div class="kpi-value" id="studentCount">0</div>
+        </div>
 
         <div class="form-section">
             <div class="form-row">
@@ -304,18 +330,51 @@ Sarah Wilson"></textarea>
 
         function assignSeats(students, totalSeats) {
             // students is array of objects {id, name}
-            // Create array of all seat indices
-            const allSeatIndices = Array.from({length: totalSeats}, (_, i) => i);
 
-            // Shuffle the seat indices to randomize which seats get students
-            const shuffledSeatIndices = shuffleArray(allSeatIndices);
+            // Get grid dimensions from the form
+            const rows = parseInt(document.getElementById('rows').value);
+            const cols = parseInt(document.getElementById('cols').value);
 
             // Initialize all seats as empty objects
             const assignments = new Array(totalSeats).fill(null).map(() => ({ id: null, name: 'Empty' }));
 
-            // Assign students (objects) to random seats
-            for (let i = 0; i < Math.min(students.length, totalSeats); i++) {
-                assignments[shuffledSeatIndices[i]] = students[i];
+            // If no students or no seats, return empty assignments
+            if (students.length === 0 || totalSeats === 0) {
+                return assignments;
+            }
+
+            // Calculate optimal spacing to maximize distance
+            // We'll use a strategy that places students as evenly as possible across the grid
+            const studentCount = Math.min(students.length, totalSeats);
+
+            // Create a copy of students and shuffle them
+            const shuffledStudents = shuffleArray([...students]);
+
+            // Separate odd and even seat indices
+            const oddSeats = [];
+            const evenSeats = [];
+
+            for (let i = 0; i < totalSeats; i++) {
+                if (i % 2 === 0) {
+                    evenSeats.push(i);  // 0, 2, 4, 6... (even indices)
+                } else {
+                    oddSeats.push(i);   // 1, 3, 5, 7... (odd indices)
+                }
+            }
+
+            // Assign students to odd seats first, then even seats
+            let studentIndex = 0;
+
+            // First, assign to odd seats (indices 1, 3, 5, etc.)
+            for (let i = 0; i < oddSeats.length && studentIndex < studentCount; i++) {
+                assignments[oddSeats[i]] = shuffledStudents[studentIndex];
+                studentIndex++;
+            }
+
+            // Then, assign to even seats (indices 0, 2, 4, etc.) if there are more students
+            for (let i = 0; i < evenSeats.length && studentIndex < studentCount; i++) {
+                assignments[evenSeats[i]] = shuffledStudents[studentIndex];
+                studentIndex++;
             }
 
             return assignments;
@@ -496,6 +555,9 @@ Sarah Wilson"></textarea>
                 studentNames.splice(totalSeats);
             }
 
+            // Update the student count display
+            document.getElementById('studentCount').textContent = studentNames.length;
+
             // Create the grid
             createGrid(rows, cols);
 
@@ -532,6 +594,10 @@ Quinn Lee
 Ruby Scott
 Sam Turner
 Tina Adams`;
+
+            // Update the student count display with the initial sample data
+            const initialStudents = parseStudents(document.getElementById('students').value);
+            document.getElementById('studentCount').textContent = initialStudents.length;
         });
     </script>
 </body>
