@@ -66,6 +66,12 @@
       50% { transform: scale(1.06); opacity: .85; }
       100% { transform: scale(1); opacity: 1; }
     }
+    .digits.showing-clock {
+      color: #FFCC00;
+    }
+    .display.showing-clock {
+      background: black;
+    }
     .panel {
       background: white;
       border-radius: 14px;
@@ -73,6 +79,9 @@
       padding: 12px;
       display: grid;
       gap: 12px;
+    }
+    .panel + .panel {
+      margin-top: 8px;
     }
 
     .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -110,8 +119,8 @@
     .btn:active { transform: translateY(1px); }
     .btn[disabled] { opacity: .55; cursor: not-allowed; }
 
-    .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
-    .btn.primary:hover { filter: brightness(1.03); }
+    .btn.primary { background: #1D6F42; border-color: #1D6F42; color: white; }
+    .btn.primary:hover { filter: brightness(1.1); }
     .btn.danger { background: #ef4444; border-color: #ef4444; color: white; }
 
     .presets { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -172,6 +181,15 @@
     </div>
   </div>
 
+  <div class="panel" aria-label="Display options">
+    <div class="row">
+      <label class="chime-toggle" for="showCountdownToggle">
+        <input id="showCountdownToggle" type="checkbox" checked />
+        Show countdown (uncheck to show current time)
+      </label>
+    </div>
+  </div>
+
   <audio id="chimeAudio" src="chime.mp3" preload="auto" aria-hidden="true"></audio>
 
   <script>
@@ -185,6 +203,7 @@
       const presetsWrap = document.getElementById('presets');
       const errorEl = document.getElementById('error');
       const chimeToggle = document.getElementById('chimeToggle');
+      const showCountdownToggle = document.getElementById('showCountdownToggle');
       const chimeAudio = document.getElementById('chimeAudio');
       const minutesInput = document.getElementById('minutesInput');
       const setMinutesBtn = document.getElementById('setMinutesBtn');
@@ -403,16 +422,15 @@
           playChimeIfEnabled();
           clearCountdown();
           setMode(MODE_IDLE);
+          display.classList.remove('showing-clock');
+          readout.classList.remove('showing-clock');
           return;
         }
         const whole = Math.ceil(remainingMsRaw / 1000);
         if(whole !== lastWhole){
           lastWhole = whole;
-          const formatted = formatDuration(whole);
-          readout.textContent = formatted;
-          readout.setAttribute('aria-label', `Time remaining ${formatted}`);
-          // update color & pulsing: orange when 10 < seconds < 60, pulsing when <= 10
-          updateReadoutAppearance(whole);
+          // Update display based on toggle state
+          updateDisplayBasedOnToggle();
         }
         if(mode === MODE_COUNTDOWN){
           rafId = requestAnimationFrame(tick);
@@ -447,6 +465,27 @@
         setReadoutColorDefault();
       }
 
+      function updateDisplayBasedOnToggle(){
+        if (mode === MODE_COUNTDOWN && endEpochMs) {
+          if (showCountdownToggle && showCountdownToggle.checked) {
+            // Show countdown
+            const remainingMsRaw = endEpochMs - Date.now();
+            const whole = Math.ceil(Math.max(0, remainingMsRaw) / 1000);
+            const formatted = formatDuration(whole);
+            readout.textContent = formatted;
+            readout.setAttribute('aria-label', `Time remaining ${formatted}`);
+            updateReadoutAppearance(whole);
+            display.classList.remove('showing-clock');
+            readout.classList.remove('showing-clock');
+          } else {
+            // Show current time
+            updateClockReadout();
+            display.classList.add('showing-clock');
+            readout.classList.add('showing-clock');
+          }
+        }
+      }
+
       function startClock(){
         stopClock();
         clearCountdown();
@@ -466,7 +505,10 @@
         setError('');
         readout.setAttribute('aria-label', 'Time remaining 00:00');
         setReadoutColorDefault();
-        minutesInput.value = '5'; // Reset to default value
+        minutesInput.value = '5';
+        if(showCountdownToggle) showCountdownToggle.checked = true;
+        display.classList.remove('showing-clock');
+        readout.classList.remove('showing-clock');
       }
 
       startDeadlineBtn.addEventListener('click', startDeadline);
@@ -503,6 +545,12 @@
         setError('');
         updateControlStates();
       });
+
+      if(showCountdownToggle){
+        showCountdownToggle.addEventListener('change', ()=>{
+          updateDisplayBasedOnToggle();
+        });
+      }
 
       if(chimeToggle){
         chimeToggle.addEventListener('change', ()=>{
