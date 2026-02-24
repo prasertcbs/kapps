@@ -1,572 +1,704 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>KTimer by prasert@cbs.chula.ac.th</title>
-  <style>
-    :root {
-      --bg: #f5f7fb;
-      --fg: #111111;
-      --muted: #6b7280;
-      --accent: #2563eb;
-      --cosmic-orange: rgb(220, 20, 60);
-      --timer-font-size: 16vmin; /* increased initial font size */
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--fg);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      display: flex;
-      flex-direction: column;
-    }
-
-    .container {
-      max-width: 90%;
-      margin: 0 auto;
-      width: 100%;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      height: 100%;
-    }
-
-    .display {
-      flex: 1 1 auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-      padding: 12px;
-      min-height: 160px;
-    }
-    .digits {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Roboto Mono", monospace;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: 0.005em;
-      line-height: 1;
-      font-weight: 500;
-      font-size: var(--timer-font-size);
-      color: var(--fg);
-      transform-origin: center;
-    }
-
-    .digits.alerting {
-      color: var(--cosmic-orange);
-      animation: pulse 1s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.06); opacity: .85; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    .digits.showing-clock {
-      color: #FFCC00;
-    }
-    .display.showing-clock {
-      background: black;
-    }
-    .panel {
-      background: white;
-      border-radius: 14px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-      padding: 12px;
-      display: grid;
-      gap: 12px;
-    }
-    .panel + .panel {
-      margin-top: 8px;
-    }
-
-    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-
-    label { font-weight: 600; color: var(--muted); }
-    .chime-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 600;
-      color: var(--fg);
-    }
-
-    input[type="text"], input[type="time"] {
-      height: 40px;
-      padding: 0 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 10px;
-      font-size: 16px;
-      outline: none;
-    }
-    input[type="text"]:focus, input[type="time"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }
-
-    .btn {
-      height: 40px;
-      padding: 0 14px;
-      border: 1px solid #d1d5db;
-      background: #f8fafc;
-      color: #111;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: transform .05s ease, box-shadow .2s ease, background .2s ease;
-    }
-    .btn:hover { background: #eef2ff; }
-    .btn:active { transform: translateY(1px); }
-    .btn[disabled] { opacity: .55; cursor: not-allowed; }
-
-    .btn.primary { background: #1D6F42; border-color: #1D6F42; color: white; }
-    .btn.primary:hover { filter: brightness(1.1); }
-    .btn.danger { background: #ef4444; border-color: #ef4444; color: white; }
-
-    .presets { display: flex; flex-wrap: wrap; gap: 8px; }
-
-    .help { color: var(--muted); font-size: 14px; }
-    .error { color: #b91c1c; font-weight: 600; }
-
-    @media (max-width: 560px) { .row { flex-direction: column; align-items: stretch; } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KTimer - PrasertCBS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .timer-display {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Roboto Mono', monospace;
+            font-variant-numeric: tabular-nums;
+            font-size: clamp(3rem, 15vw, 10rem);
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+        .timer-display.alerting {
+            animation: pulse-alert 1s ease-in-out infinite;
+        }
+        @keyframes pulse-alert {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.85; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .display-clock {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%) !important;
+        }
+        .display-clock .timer-display {
+            color: #fbbf24 !important;
+        }
+        .time-picker {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+        }
+        .time-picker-col {
+            position: relative;
+            height: 140px;
+            width: 80px;
+            overflow: hidden;
+            border-radius: 12px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .time-picker-scroll {
+            height: 100%;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 54px 0;
+        }
+        .time-picker-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .time-picker-item {
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            scroll-snap-align: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: rgba(148, 163, 184, 0.4);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .time-picker-item.selected {
+            color: #f97316;
+        }
+        .time-picker-col::before,
+        .time-picker-col::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 54px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .time-picker-col::before {
+            top: 0;
+            background: linear-gradient(to bottom, rgba(30, 41, 59, 0.9), transparent);
+        }
+        .time-picker-col::after {
+            bottom: 0;
+            background: linear-gradient(to top, rgba(30, 41, 59, 0.9), transparent);
+        }
+        .time-picker-highlight {
+            position: absolute;
+            top: 54px;
+            left: 4px;
+            right: 4px;
+            height: 32px;
+            border: 2px solid rgba(249, 115, 22, 0.3);
+            border-radius: 8px;
+            background: rgba(249, 115, 22, 0.1);
+            pointer-events: none;
+        }
+        .time-picker-separator {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f97316;
+            padding: 0 0.25rem;
+        }
+    </style>
 </head>
-<body>
-  <div class="container" id="container">
-    <div class="display" id="display">
-      <div class="digits" id="readout" role="timer" aria-live="polite" aria-atomic="true" aria-label="Time remaining">00:00</div>
-    </div>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen">
+    <div class="relative overflow-hidden min-h-screen">
+        <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"></div>
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-orange-500/10 rounded-full blur-3xl"></div>
+        
+        <div class="relative z-10 flex flex-col min-h-screen">
+            <nav class="container mx-auto px-6 py-6">
+                <div class="flex items-center justify-center">
+                    <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center shadow-lg shadow-brand-500/25">
+                            <i class="fa-solid fa-graduation-cap text-white text-lg"></i>
+                        </div>
+                        <span class="text-xl font-bold text-white">PrasertCBS</span>
+                    </a>
+                </div>
+            </nav>
 
-    <div class="panel" aria-label="Timer controls">
-      <div class="row">
-        <label for="deadlineInput">Deadline (hh:mm AM/PM)</label>
-        <input id="deadlineInput" type="text" inputmode="latin" autocomplete="off" placeholder="hh:mm AM/PM" aria-describedby="deadlineHelp" />
-        <button id="showCurrentTimeBtn" class="btn" title="Show the current time (updates every second)" aria-label="Show current time clock">Current Time</button>
-        <button id="startDeadline" class="btn primary">Start</button>
-        <button id="stopBtn" class="btn danger" hidden>Stop / Reset</button>
-      </div>
-      <!-- <div id="deadlineHelp" class="help">Example: <em>5:55 PM</em>. If that time already passed today, the app rolls to tomorrow (up to 12 hours).</div> -->
+            <header class="container mx-auto px-6 pt-4 pb-6 text-center">
+                <h1 class="text-3xl md:text-5xl font-bold mb-3 leading-tight">
+                    <span class="gradient-text">Timer & Stopwatch</span>
+                </h1>
+                <p class="text-slate-400 max-w-xl mx-auto">Professional countdown timer and stopwatch for classroom activities.</p>
+            </header>
 
-      <div class="row">
-        <label for="minutesInput">Minutes</label>
-        <input id="minutesInput" type="number" min="1" max="999" value="5" inputmode="numeric" style="width: 100px;" aria-describedby="minutesHelp" />
-        <button id="setMinutesBtn" class="btn" aria-label="Set minutes">Set Minutes</button>
-        <span id="minutesHelp" class="help">Enter minutes (1-999)</span>
-      </div>
-      <div class="row">
-        <label>Presets</label>
-        <div class="presets" id="presets">
-          <button class="btn" data-seconds="30" aria-label="Start 30 seconds">30s</button>
-          <button class="btn" data-seconds="60" aria-label="Start 60 seconds">60s</button>
-          <button class="btn" data-seconds="180" aria-label="Start 3 minutes">3m</button>
-          <button class="btn" data-seconds="300" aria-label="Start 5 minutes">5m</button>
-          <button class="btn" data-seconds="420" aria-label="Start 7 minutes">7m</button>
-          <button class="btn" data-seconds="600" aria-label="Start 10 minutes">10m</button>
-          <button class="btn" data-seconds="900" aria-label="Start 15 minutes">15m</button>
-          <button class="btn" data-seconds="1200" aria-label="Start 20 minutes">20m</button>
-          <button class="btn" data-seconds="1500" aria-label="Start 25 minutes">25m</button>
-          <button class="btn" data-seconds="1800" aria-label="Start 30 minutes">30m</button>
-          <button class="btn" data-seconds="3600" aria-label="Start 60 minutes">60m</button>
-          <button class="btn" data-seconds="5400" aria-label="Start 90 minutes">90m</button>
-          <button class="btn" data-seconds="7200" aria-label="Start 120 minutes">120m</button>
+            <main class="container mx-auto px-6 pb-16 flex-grow">
+                <div class="max-w-4xl mx-auto space-y-6">
+                    
+                    <div id="display" class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-8 min-h-[200px] flex items-center justify-center relative overflow-hidden transition-all duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent"></div>
+                        <div id="readout" class="timer-display text-orange-400 relative z-10" role="timer" aria-live="polite" aria-atomic="true" aria-label="Time remaining">00:00</div>
+                    </div>
+
+                    <div class="grid gap-6 lg:grid-cols-2">
+                        <div class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6">
+                            <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-clock text-orange-400"></i>Deadline Timer
+                            </h2>
+                            
+                            <div class="space-y-4">
+                                <label class="block text-sm text-slate-400 mb-2 text-center">Set deadline</label>
+                                <div class="time-picker">
+                                    <div class="time-picker-col">
+                                        <div class="time-picker-highlight"></div>
+                                        <div class="time-picker-scroll" id="hourScroll"></div>
+                                    </div>
+                                    <span class="time-picker-separator">:</span>
+                                    <div class="time-picker-col">
+                                        <div class="time-picker-highlight"></div>
+                                        <div class="time-picker-scroll" id="minuteScroll"></div>
+                                    </div>
+                                    <div class="time-picker-col" style="width: 70px;">
+                                        <div class="time-picker-highlight"></div>
+                                        <div class="time-picker-scroll" id="ampmScroll"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex gap-2">
+                                    <button id="startDeadline" class="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-orange-500/25 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
+                                        <i class="fa-solid fa-play mr-2"></i>Start
+                                    </button>
+                                    <button id="showCurrentTimeBtn" class="px-4 py-3 bg-white/5 border border-white/10 rounded-xl font-medium text-slate-300 hover:bg-white/10 transition-all" title="Toggle between countdown and current time">
+                                        <i class="fa-solid fa-clock"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="error" class="mt-3 text-rose-400 text-sm"></div>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6">
+                            <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-hourglass-half text-orange-400"></i>Quick Timer
+                            </h2>
+                            
+                            <div class="space-y-4">
+                                <div class="flex gap-2">
+                                    <input id="minutesInput" type="number" min="1" max="999" value="5" class="w-24 bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-slate-200 text-center focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all">
+                                    <span class="flex items-center text-slate-400">minutes</span>
+                                    <button id="setMinutesBtn" class="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl font-medium text-slate-300 hover:bg-white/10 transition-all">
+                                        <i class="fa-solid fa-play mr-2"></i>Set
+                                    </button>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm text-slate-400 mb-2">Presets</label>
+                                    <div class="flex flex-wrap gap-2" id="presets">
+                                        <button class="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-sm text-slate-300 hover:bg-orange-500/20 hover:border-orange-500/30 hover:text-orange-300 transition-all" data-seconds="30">30s</button>
+                                        <button class="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-sm text-slate-300 hover:bg-orange-500/20 hover:border-orange-500/30 hover:text-orange-300 transition-all" data-seconds="60">1m</button>
+                                        <button class="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-sm text-slate-300 hover:bg-orange-500/20 hover:border-orange-500/30 hover:text-orange-300 transition-all" data-seconds="180">3m</button>
+                                        <button class="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-sm text-slate-300 hover:bg-orange-500/20 hover:border-orange-500/30 hover:text-orange-300 transition-all" data-seconds="300">5m</button>
+                                        <button class="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-sm text-slate-300 hover:bg-orange-500/20 hover:border-orange-500/30 hover:text-orange-300 transition-all" data-seconds="420">7m</button>
+                                        <button class="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-sm text-slate-300 hover:bg-orange-500/20 hover:border-orange-500/30 hover:text-orange-300 transition-all" data-seconds="600">10m</button>
+                                        <button class="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-sm text-slate-300 hover:bg-orange-500/20 hover:border-orange-500/30 hover:text-orange-300 transition-all" data-seconds="900">15m</button>
+                                        <button class="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-sm text-slate-300 hover:bg-orange-500/20 hover:border-orange-500/30 hover:text-orange-300 transition-all" data-seconds="1200">20m</button>
+                                        <button class="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-sm text-slate-300 hover:bg-orange-500/20 hover:border-orange-500/30 hover:text-orange-300 transition-all" data-seconds="1500">25m</button>
+                                        <button class="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-sm text-slate-300 hover:bg-orange-500/20 hover:border-orange-500/30 hover:text-orange-300 transition-all" data-seconds="1800">30m</button>
+                                        <button class="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-sm text-slate-300 hover:bg-orange-500/20 hover:border-orange-500/30 hover:text-orange-300 transition-all" data-seconds="3600">60m</button>
+                                        <button class="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-sm text-slate-300 hover:bg-orange-500/20 hover:border-orange-500/30 hover:text-orange-300 transition-all" data-seconds="5400">90m</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6">
+                        <div class="flex flex-wrap items-center justify-between gap-4">
+                            <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+                                <input id="chimeToggle" type="checkbox" class="w-4 h-4 accent-orange-500 rounded">
+                                <i class="fa-solid fa-bell text-orange-400"></i>
+                                Play chime when done
+                            </label>
+                            <button id="stopBtn" class="hidden px-6 py-2.5 bg-gradient-to-r from-rose-500 to-rose-600 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-rose-500/25 transition-all">
+                                <i class="fa-solid fa-stop mr-2"></i>Stop / Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <footer class="border-t border-white/5 mt-auto">
+                <div class="container mx-auto px-6 py-6">
+                    <div class="flex items-center justify-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center">
+                            <i class="fa-solid fa-graduation-cap text-white text-sm"></i>
+                        </div>
+                        <span class="text-slate-400 text-sm">&copy; 2025 PrasertCBS. All rights reserved.</span>
+                    </div>
+                </div>
+            </footer>
         </div>
-      </div>
-      <div class="row">
-        <label class="chime-toggle" for="chimeToggle">
-          <input id="chimeToggle" type="checkbox" />
-          Play chime when time is up
-        </label>
-      </div>
-      <div class="row"><span id="error" class="error" role="alert" aria-live="assertive"></span></div>
     </div>
-  </div>
 
-  <div class="panel" aria-label="Display options">
-    <div class="row">
-      <label class="chime-toggle" for="showCountdownToggle">
-        <input id="showCountdownToggle" type="checkbox" checked />
-        Show countdown (uncheck to show current time)
-      </label>
-    </div>
-  </div>
+    <audio id="chimeAudio" src="chime.mp3" preload="auto" aria-hidden="true"></audio>
 
-  <audio id="chimeAudio" src="chime.mp3" preload="auto" aria-hidden="true"></audio>
+    <script>
+        (function(){
+            const readout = document.getElementById('readout');
+            const display = document.getElementById('display');
+            const startDeadlineBtn = document.getElementById('startDeadline');
+            const stopBtn = document.getElementById('stopBtn');
+            const showCurrentTimeBtn = document.getElementById('showCurrentTimeBtn');
+            const presetsWrap = document.getElementById('presets');
+            const errorEl = document.getElementById('error');
+            const chimeToggle = document.getElementById('chimeToggle');
+            const chimeAudio = document.getElementById('chimeAudio');
+            const minutesInput = document.getElementById('minutesInput');
+            const setMinutesBtn = document.getElementById('setMinutesBtn');
+            const hourScroll = document.getElementById('hourScroll');
+            const minuteScroll = document.getElementById('minuteScroll');
+            const ampmScroll = document.getElementById('ampmScroll');
 
-  <script>
-    (function(){
-      const readout = document.getElementById('readout');
-      const display = document.getElementById('display');
-      const startDeadlineBtn = document.getElementById('startDeadline');
-      const stopBtn = document.getElementById('stopBtn');
-      const deadlineInput = document.getElementById('deadlineInput');
-      const showCurrentTimeBtn = document.getElementById('showCurrentTimeBtn');
-      const presetsWrap = document.getElementById('presets');
-      const errorEl = document.getElementById('error');
-      const chimeToggle = document.getElementById('chimeToggle');
-      const showCountdownToggle = document.getElementById('showCountdownToggle');
-      const chimeAudio = document.getElementById('chimeAudio');
-      const minutesInput = document.getElementById('minutesInput');
-      const setMinutesBtn = document.getElementById('setMinutesBtn');
+            const ALERT_THRESHOLD_SECONDS = 10;
+            const CHIME_REPEAT_COUNT = 3;
 
-      const ALERT_THRESHOLD_SECONDS = 10;
-      const CHIME_REPEAT_COUNT = 3;
+            const MODE_IDLE = 'idle';
+            const MODE_COUNTDOWN = 'countdown';
+            const MODE_CLOCK = 'clock';
 
-      const MODE_IDLE = 'idle';
-      const MODE_COUNTDOWN = 'countdown';
-      const MODE_CLOCK = 'clock';
+            let mode = MODE_IDLE;
+            let rafId = null;
+            let endEpochMs = null;
+            let lastWhole = null;
+            let clockIntervalId = null;
+            let chimeRepeatsRemaining = 0;
+            let showCountdown = true;
 
-      let mode = MODE_IDLE;
-      let rafId = null;
-      let endEpochMs = null;
-      let lastWhole = null;
-      let clockIntervalId = null;
-      let chimeRepeatsRemaining = 0;
+            // Initialize time picker
+            function initTimePicker() {
+                // Hours 1-12
+                for (let h = 1; h <= 12; h++) {
+                    const item = document.createElement('div');
+                    item.className = 'time-picker-item';
+                    item.textContent = String(h).padStart(2, '0');
+                    item.dataset.value = h;
+                    hourScroll.appendChild(item);
+                }
+                
+                // Minutes 00-59
+                for (let m = 0; m < 60; m++) {
+                    const item = document.createElement('div');
+                    item.className = 'time-picker-item';
+                    item.textContent = String(m).padStart(2, '0');
+                    item.dataset.value = m;
+                    minuteScroll.appendChild(item);
+                }
+                
+                // AM/PM
+                ['AM', 'PM'].forEach(ap => {
+                    const item = document.createElement('div');
+                    item.className = 'time-picker-item';
+                    item.textContent = ap;
+                    item.dataset.value = ap;
+                    ampmScroll.appendChild(item);
+                });
 
-      function setFontSize(){
-        const rect = display.getBoundingClientRect();
-        const targetW = rect.width;
-        const targetH = rect.height;
-        const sizeByW = targetW * 0.22; // slightly larger scale
-        const sizeByH = targetH * 0.75;
-        const px = Math.max(48, Math.min(sizeByW, sizeByH));
-        document.documentElement.style.setProperty('--timer-font-size', px + 'px');
-      }
+                // Set current time as default
+                const now = new Date();
+                let hours = now.getHours();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12;
+                const minutes = now.getMinutes();
 
-      function clamp(n, min, max){ return Math.min(max, Math.max(min, n)); }
+                scrollToValue(hourScroll, hours);
+                scrollToValue(minuteScroll, minutes);
+                scrollToValue(ampmScroll, ampm);
 
-      function formatDuration(totalSec){
-        const s = clamp(Math.floor(totalSec), 0, 359999);
-        if (s >= 3600) {
-          const hrs = Math.floor(s / 3600);
-          const mins = Math.floor((s % 3600) / 60);
-          const secs = s % 60;
-          return String(hrs).padStart(2,'0') + ':' + String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
-        } else {
-          const mins = Math.floor(s / 60);
-          const secs = s % 60;
-          return String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
-        }
-      }
+                // Add scroll listeners
+                [hourScroll, minuteScroll, ampmScroll].forEach(scroll => {
+                    scroll.addEventListener('scroll', () => updateSelectedItems(scroll));
+                });
+            }
 
-      function parse12hTime(str){
-        if(!str) return null;
-        const m = str.trim().match(/^(\d{1,2}):(\d{2})\s*([AaPp][Mm])$/);
-        if(!m) return null;
-        let h = parseInt(m[1],10);
-        const min = parseInt(m[2],10);
-        const ap = m[3].toUpperCase();
-        if(min > 59 || h < 1 || h > 12) return null;
-        if(ap === 'PM' && h !== 12) h += 12;
-        if(ap === 'AM' && h === 12) h = 0;
-        const now = new Date();
-        const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, min, 0, 0);
-        if(target <= now) target.setDate(target.getDate() + 1);
-        return target;
-      }
+            function scrollToValue(scrollEl, value) {
+                const items = scrollEl.querySelectorAll('.time-picker-item');
+                items.forEach((item, index) => {
+                    if (item.dataset.value == value || item.dataset.value === String(value)) {
+                        scrollEl.scrollTop = index * 32;
+                    }
+                });
+                updateSelectedItems(scrollEl);
+            }
 
-      function setDeadlineFromHM(hours, minutes){
-        const normalizedH = Number.isFinite(hours) ? hours : 0;
-        const normalizedM = Number.isFinite(minutes) ? minutes : 0;
-        const H = Math.max(0, Math.min(23, Math.floor(normalizedH)));
-        const M = Math.max(0, Math.min(59, Math.floor(normalizedM)));
-        const mm = String(M).padStart(2,'0');
-        const ampm = H >= 12 ? 'PM' : 'AM';
-        const h12 = ((H + 11) % 12) + 1;
-        deadlineInput.value = `${h12}:${mm} ${ampm}`;
-        try {
-          deadlineInput.dispatchEvent(new Event('input', { bubbles: true }));
-        } catch (_) {
-          const evt = document.createEvent('Event');
-          evt.initEvent('input', true, false);
-          deadlineInput.dispatchEvent(evt);
-        }
-      }
+            function updateSelectedItems(scrollEl) {
+                const scrollTop = scrollEl.scrollTop;
+                const selectedIndex = Math.round(scrollTop / 32);
+                const items = scrollEl.querySelectorAll('.time-picker-item');
+                items.forEach((item, index) => {
+                    item.classList.toggle('selected', index === selectedIndex);
+                });
+            }
 
-      function setError(msg){ errorEl.textContent = msg || ''; }
+            function getSelectedValue(scrollEl) {
+                const scrollTop = scrollEl.scrollTop;
+                const selectedIndex = Math.round(scrollTop / 32);
+                const items = scrollEl.querySelectorAll('.time-picker-item');
+                if (items[selectedIndex]) {
+                    return items[selectedIndex].dataset.value;
+                }
+                return null;
+            }
 
-      function setReadoutColorDefault(){
-        readout.style.removeProperty('color');
-      }
+            function getSelectedTime() {
+                const hour = parseInt(getSelectedValue(hourScroll));
+                const minute = parseInt(getSelectedValue(minuteScroll));
+                const ampm = getSelectedValue(ampmScroll);
+                return { hour, minute, ampm };
+            }
 
-      function setReadoutColorAccent(){
-        readout.style.color = 'var(--cosmic-orange)';
-      }
+            function setTimePickerEnabled(enabled) {
+                [hourScroll, minuteScroll, ampmScroll].forEach(scroll => {
+                    scroll.style.pointerEvents = enabled ? 'auto' : 'none';
+                    scroll.style.opacity = enabled ? '1' : '0.5';
+                });
+            }
 
-      function setReadoutColorOrange(){
-        readout.style.color = 'orange';
-      }
+            function clamp(n, min, max){ return Math.min(max, Math.max(min, n)); }
 
-      function updateReadoutAppearance(whole){
-        // alerting (pulsing) when at or below ALERT_THRESHOLD_SECONDS
-        readout.classList.toggle('alerting', whole <= ALERT_THRESHOLD_SECONDS);
-        if (whole <= ALERT_THRESHOLD_SECONDS) {
-          // final alert color (pulsing via .alerting)
-          setReadoutColorAccent();
-        } else if (whole > ALERT_THRESHOLD_SECONDS && whole < 60) {
-          // warning window: orange (no pulsing)
-          setReadoutColorOrange();
-        } else {
-          // default color
-          setReadoutColorDefault();
-        }
-      }
+            function formatDuration(totalSec){
+                const s = clamp(Math.floor(totalSec), 0, 359999);
+                if (s >= 3600) {
+                    const hrs = Math.floor(s / 3600);
+                    const mins = Math.floor((s % 3600) / 60);
+                    const secs = s % 60;
+                    return String(hrs).padStart(2,'0') + ':' + String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+                } else {
+                    const mins = Math.floor(s / 60);
+                    const secs = s % 60;
+                    return String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+                }
+            }
 
-      function stopChime(){
-        if(!chimeAudio) return;
-        chimeAudio.pause();
-        chimeAudio.currentTime = 0;
-        chimeRepeatsRemaining = 0;
-        chimeAudio.removeEventListener('ended', handleChimeEnded);
-      }
+            function getTimeFromPicker() {
+                const { hour, minute, ampm } = getSelectedTime();
+                let h = hour;
+                if (ampm === 'PM' && h !== 12) h += 12;
+                if (ampm === 'AM' && h === 12) h = 0;
+                
+                const now = new Date();
+                const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, minute, 0, 0);
+                if (target <= now) target.setDate(target.getDate() + 1);
+                return target;
+            }
 
-      function playChimeIfEnabled(){
-        if(!chimeAudio || !chimeToggle || !chimeToggle.checked) return;
-        chimeAudio.removeEventListener('ended', handleChimeEnded);
-        chimeRepeatsRemaining = Math.max(0, CHIME_REPEAT_COUNT - 1);
-        chimeAudio.currentTime = 0;
-        const maybePlay = chimeAudio.play();
-        if(maybePlay && typeof maybePlay.catch === 'function'){
-          maybePlay.catch(()=>{});
-        }
-        if(chimeRepeatsRemaining > 0){
-          chimeAudio.addEventListener('ended', handleChimeEnded);
-        }
-      }
+            function setError(msg){ errorEl.textContent = msg || ''; }
 
-      function handleChimeEnded(){
-        if(!chimeAudio) return;
-        if(chimeRepeatsRemaining <= 0){
-          chimeAudio.removeEventListener('ended', handleChimeEnded);
-          return;
-        }
-        chimeRepeatsRemaining -= 1;
-        chimeAudio.currentTime = 0;
-        const maybePlay = chimeAudio.play();
-        if(maybePlay && typeof maybePlay.catch === 'function'){
-          maybePlay.catch(()=>{});
-        }
-        if(chimeRepeatsRemaining <= 0){
-          chimeAudio.removeEventListener('ended', handleChimeEnded);
-        }
-      }
+            function updateReadoutAppearance(whole){
+                readout.classList.toggle('alerting', whole <= ALERT_THRESHOLD_SECONDS);
+                if (whole <= ALERT_THRESHOLD_SECONDS) {
+                    readout.classList.remove('text-orange-400', 'text-amber-400');
+                    readout.classList.add('text-rose-400');
+                } else if (whole > ALERT_THRESHOLD_SECONDS && whole < 60) {
+                    readout.classList.remove('text-orange-400', 'text-rose-400');
+                    readout.classList.add('text-amber-400');
+                } else {
+                    readout.classList.remove('text-amber-400', 'text-rose-400');
+                    readout.classList.add('text-orange-400');
+                }
+            }
 
-      function updateControlStates(){
-        const isCountdown = mode === MODE_COUNTDOWN;
-        const isClock = mode === MODE_CLOCK;
-        const isActive = isCountdown || isClock;
-        const hasValidDeadline = !!parse12hTime(deadlineInput.value);
+            function stopChime(){
+                if(!chimeAudio) return;
+                chimeAudio.pause();
+                chimeAudio.currentTime = 0;
+                chimeRepeatsRemaining = 0;
+                chimeAudio.removeEventListener('ended', handleChimeEnded);
+            }
 
-        startDeadlineBtn.disabled = isActive || !hasValidDeadline;
+            function playChimeIfEnabled(){
+                if(!chimeAudio || !chimeToggle || !chimeToggle.checked) return;
+                chimeAudio.removeEventListener('ended', handleChimeEnded);
+                chimeRepeatsRemaining = Math.max(0, CHIME_REPEAT_COUNT - 1);
+                chimeAudio.currentTime = 0;
+                const maybePlay = chimeAudio.play();
+                if(maybePlay && typeof maybePlay.catch === 'function'){
+                    maybePlay.catch(()=>{});
+                }
+                if(chimeRepeatsRemaining > 0){
+                    chimeAudio.addEventListener('ended', handleChimeEnded);
+                }
+            }
 
-        const clockBtnDisabled = isClock;
-        showCurrentTimeBtn.disabled = clockBtnDisabled;
-        showCurrentTimeBtn.setAttribute('aria-disabled', String(showCurrentTimeBtn.disabled));
+            function handleChimeEnded(){
+                if(!chimeAudio) return;
+                if(chimeRepeatsRemaining <= 0){
+                    chimeAudio.removeEventListener('ended', handleChimeEnded);
+                    return;
+                }
+                chimeRepeatsRemaining -= 1;
+                chimeAudio.currentTime = 0;
+                const maybePlay = chimeAudio.play();
+                if(maybePlay && typeof maybePlay.catch === 'function'){
+                    maybePlay.catch(()=>{});
+                }
+                if(chimeRepeatsRemaining <= 0){
+                    chimeAudio.removeEventListener('ended', handleChimeEnded);
+                }
+            }
 
-        deadlineInput.disabled = isActive;
-        minutesInput.disabled = isActive;
-        setMinutesBtn.disabled = isActive;
-        Array.from(presetsWrap.querySelectorAll('button')).forEach(b => b.disabled = isActive);
-        stopBtn.hidden = !isActive;
-      }
+            function updateControlStates(){
+                const isCountdown = mode === MODE_COUNTDOWN;
+                const isClock = mode === MODE_CLOCK;
+                const isActive = isCountdown || isClock;
 
-      function setMode(nextMode){
-        mode = nextMode;
-        updateControlStates();
-      }
+                startDeadlineBtn.disabled = isActive;
+                setTimePickerEnabled(!isActive);
+                minutesInput.disabled = isActive;
+                setMinutesBtn.disabled = isActive;
+                Array.from(presetsWrap.querySelectorAll('button')).forEach(b => b.disabled = isActive);
+                stopBtn.classList.toggle('hidden', !isActive);
+                updateToggleBtnIcon();
+            }
 
-      function startDuration(seconds){
-        stopClock();
-        clearCountdown();
-        stopChime();
-        setError('');
-        endEpochMs = Date.now() + Math.max(0, Math.floor(seconds))*1000;
-        lastWhole = null;
-        readout.classList.remove('alerting');
-        setReadoutColorDefault();
-        const initialWhole = Math.max(0, Math.floor(seconds));
-        if(initialWhole <= 0){
-          readout.textContent = '00:00';
-          readout.setAttribute('aria-label', 'Time remaining 00:00');
-          setReadoutColorAccent();
-          clearCountdown();
-          setMode(MODE_IDLE);
-          return;
-        }
-        const formatted = formatDuration(initialWhole);
-        readout.textContent = formatted;
-        readout.setAttribute('aria-label', `Time remaining ${formatted}`);
-        // set color / pulsing based on remaining time
-        updateReadoutAppearance(initialWhole);
-        setMode(MODE_COUNTDOWN);
-        tick();
-      }
+            function setMode(nextMode){
+                mode = nextMode;
+                updateControlStates();
+            }
 
-      function startDeadline(){
-        if(mode !== MODE_IDLE) return;
-        setError('');
-        const target = parse12hTime(deadlineInput.value);
-        if(!target){ setError('Enter a time like 5:55 PM.'); return; }
-        const remaining = Math.ceil((target.getTime() - Date.now())/1000);
-        if(remaining <= 0){ setError('That time has already passed.'); return; }
-        startDuration(remaining);
-      }
+            function startDuration(seconds){
+                stopClock();
+                clearCountdown();
+                stopChime();
+                setError('');
+                showCountdown = true;
+                endEpochMs = Date.now() + Math.max(0, Math.floor(seconds))*1000;
+                lastWhole = null;
+                readout.classList.remove('alerting');
+                readout.classList.remove('text-rose-400', 'text-amber-400');
+                readout.classList.add('text-orange-400');
+                display.classList.remove('display-clock');
+                updateToggleBtnIcon();
+                
+                const initialWhole = Math.max(0, Math.floor(seconds));
+                if(initialWhole <= 0){
+                    readout.textContent = '00:00';
+                    readout.setAttribute('aria-label', 'Time remaining 00:00');
+                    readout.classList.remove('text-orange-400');
+                    readout.classList.add('text-rose-400');
+                    clearCountdown();
+                    setMode(MODE_IDLE);
+                    return;
+                }
+                const formatted = formatDuration(initialWhole);
+                readout.textContent = formatted;
+                readout.setAttribute('aria-label', `Time remaining ${formatted}`);
+                updateReadoutAppearance(initialWhole);
+                setMode(MODE_COUNTDOWN);
+                tick();
+            }
 
-      function tick(){
-        if(mode !== MODE_COUNTDOWN || !endEpochMs) return;
-        const remainingMsRaw = endEpochMs - Date.now();
-        if(remainingMsRaw <= 0){
-          readout.textContent = '00:00';
-          readout.setAttribute('aria-label', 'Time remaining 00:00');
-          readout.classList.remove('alerting');
-          setReadoutColorAccent();
-          playChimeIfEnabled();
-          clearCountdown();
-          setMode(MODE_IDLE);
-          display.classList.remove('showing-clock');
-          readout.classList.remove('showing-clock');
-          return;
-        }
-        const whole = Math.ceil(remainingMsRaw / 1000);
-        if(whole !== lastWhole){
-          lastWhole = whole;
-          // Update display based on toggle state
-          updateDisplayBasedOnToggle();
-        }
-        if(mode === MODE_COUNTDOWN){
-          rafId = requestAnimationFrame(tick);
-        }
-      }
+            function startDeadline(){
+                if(mode !== MODE_IDLE) return;
+                setError('');
+                const target = getTimeFromPicker();
+                const remaining = Math.ceil((target.getTime() - Date.now())/1000);
+                if(remaining <= 0){ setError('That time has already passed.'); return; }
+                startDuration(remaining);
+            }
 
-      function clearCountdown(){
-        if(rafId){
-          cancelAnimationFrame(rafId);
-        }
-        rafId = null;
-        endEpochMs = null;
-        lastWhole = null;
-        readout.classList.remove('alerting');
-      }
+            function tick(){
+                if(mode !== MODE_COUNTDOWN || !endEpochMs) return;
+                const remainingMsRaw = endEpochMs - Date.now();
+                if(remainingMsRaw <= 0){
+                    readout.textContent = '00:00';
+                    readout.setAttribute('aria-label', 'Time remaining 00:00');
+                    readout.classList.remove('alerting');
+                    readout.classList.remove('text-orange-400', 'text-amber-400');
+                    readout.classList.add('text-rose-400');
+                    playChimeIfEnabled();
+                    clearCountdown();
+                    setMode(MODE_IDLE);
+                    display.classList.remove('display-clock');
+                    showCountdown = true;
+                    updateToggleBtnIcon();
+                    return;
+                }
+                const whole = Math.ceil(remainingMsRaw / 1000);
+                if(whole !== lastWhole){
+                    lastWhole = whole;
+                    updateDisplayBasedOnToggle();
+                }
+                if(mode === MODE_COUNTDOWN){
+                    rafId = requestAnimationFrame(tick);
+                }
+            }
 
-      function stopClock(){
-        if(clockIntervalId !== null){
-          clearInterval(clockIntervalId);
-          clockIntervalId = null;
-        }
-      }
+            function clearCountdown(){
+                if(rafId){
+                    cancelAnimationFrame(rafId);
+                }
+                rafId = null;
+                endEpochMs = null;
+                lastWhole = null;
+                readout.classList.remove('alerting');
+            }
 
-      function updateClockReadout(){
-        const now = new Date();
-        const hh = String(now.getHours()).padStart(2, '0');
-        const mm = String(now.getMinutes()).padStart(2, '0');
-        const ss = String(now.getSeconds()).padStart(2, '0');
-        readout.textContent = `${hh}:${mm}:${ss}`;
-        readout.classList.remove('alerting');
-        readout.setAttribute('aria-label', `Current time ${hh}:${mm}:${ss}`);
-        setReadoutColorDefault();
-      }
+            function stopClock(){
+                if(clockIntervalId !== null){
+                    clearInterval(clockIntervalId);
+                    clockIntervalId = null;
+                }
+            }
 
-      function updateDisplayBasedOnToggle(){
-        if (mode === MODE_COUNTDOWN && endEpochMs) {
-          if (showCountdownToggle && showCountdownToggle.checked) {
-            // Show countdown
-            const remainingMsRaw = endEpochMs - Date.now();
-            const whole = Math.ceil(Math.max(0, remainingMsRaw) / 1000);
-            const formatted = formatDuration(whole);
-            readout.textContent = formatted;
-            readout.setAttribute('aria-label', `Time remaining ${formatted}`);
-            updateReadoutAppearance(whole);
-            display.classList.remove('showing-clock');
-            readout.classList.remove('showing-clock');
-          } else {
-            // Show current time
-            updateClockReadout();
-            display.classList.add('showing-clock');
-            readout.classList.add('showing-clock');
-          }
-        }
-      }
+            function updateClockReadout(){
+                const now = new Date();
+                const hh = String(now.getHours()).padStart(2, '0');
+                const mm = String(now.getMinutes()).padStart(2, '0');
+                const ss = String(now.getSeconds()).padStart(2, '0');
+                readout.textContent = `${hh}:${mm}:${ss}`;
+                readout.classList.remove('alerting', 'text-orange-400', 'text-amber-400', 'text-rose-400');
+                readout.classList.add('text-amber-400');
+                readout.setAttribute('aria-label', `Current time ${hh}:${mm}:${ss}`);
+            }
 
-      function startClock(){
-        stopClock();
-        clearCountdown();
-        stopChime();
-        setError('');
-        setMode(MODE_CLOCK);
-        updateClockReadout();
-        clockIntervalId = window.setInterval(updateClockReadout, 1000);
-      }
+            function updateDisplayBasedOnToggle(){
+                if (mode === MODE_COUNTDOWN && endEpochMs) {
+                    if (showCountdown) {
+                        const remainingMsRaw = endEpochMs - Date.now();
+                        const whole = Math.ceil(Math.max(0, remainingMsRaw) / 1000);
+                        const formatted = formatDuration(whole);
+                        readout.textContent = formatted;
+                        readout.setAttribute('aria-label', `Time remaining ${formatted}`);
+                        updateReadoutAppearance(whole);
+                        display.classList.remove('display-clock');
+                    } else {
+                        updateClockReadout();
+                        display.classList.add('display-clock');
+                    }
+                }
+            }
 
-      function reset(){
-        stopClock();
-        clearCountdown();
-        stopChime();
-        setMode(MODE_IDLE);
-        readout.textContent = '00:00';
-        setError('');
-        readout.setAttribute('aria-label', 'Time remaining 00:00');
-        setReadoutColorDefault();
-        minutesInput.value = '5';
-        if(showCountdownToggle) showCountdownToggle.checked = true;
-        display.classList.remove('showing-clock');
-        readout.classList.remove('showing-clock');
-      }
+            function toggleDisplayMode(){
+                if (mode === MODE_COUNTDOWN) {
+                    showCountdown = !showCountdown;
+                    updateDisplayBasedOnToggle();
+                    updateToggleBtnIcon();
+                } else if (mode === MODE_IDLE) {
+                    startClock();
+                }
+            }
 
-      startDeadlineBtn.addEventListener('click', startDeadline);
-      stopBtn.addEventListener('click', reset);
+            function updateToggleBtnIcon(){
+                if (mode === MODE_COUNTDOWN) {
+                    showCurrentTimeBtn.innerHTML = showCountdown 
+                        ? '<i class="fa-solid fa-clock"></i>' 
+                        : '<i class="fa-solid fa-hourglass-half"></i>';
+                    showCurrentTimeBtn.title = showCountdown ? 'Show current time' : 'Show countdown';
+                } else {
+                    showCurrentTimeBtn.innerHTML = '<i class="fa-solid fa-clock"></i>';
+                    showCurrentTimeBtn.title = 'Show current time';
+                }
+            }
 
-      presetsWrap.addEventListener('click', (e)=>{
-        const btn = e.target.closest('button[data-seconds]');
-        if(!btn || mode !== MODE_IDLE) return;
-        startDuration(parseInt(btn.dataset.seconds, 10));
-      });
+            function startClock(){
+                stopClock();
+                clearCountdown();
+                stopChime();
+                setError('');
+                setMode(MODE_CLOCK);
+                display.classList.add('display-clock');
+                updateClockReadout();
+                clockIntervalId = window.setInterval(updateClockReadout, 1000);
+                updateToggleBtnIcon();
+            }
 
-      setMinutesBtn.addEventListener('click', () => {
-        if(mode !== MODE_IDLE) return;
-        const minutes = parseInt(minutesInput.value, 10);
-        if(isNaN(minutes) || minutes <= 0) {
-          setError('Please enter a valid number of minutes.');
-          return;
-        }
-        startDuration(minutes * 60);
-      });
+            function reset(){
+                stopClock();
+                clearCountdown();
+                stopChime();
+                setMode(MODE_IDLE);
+                readout.textContent = '00:00';
+                setError('');
+                readout.setAttribute('aria-label', 'Time remaining 00:00');
+                readout.classList.remove('text-rose-400', 'text-amber-400');
+                readout.classList.add('text-orange-400');
+                minutesInput.value = '5';
+                showCountdown = true;
+                display.classList.remove('display-clock');
+                updateToggleBtnIcon();
+            }
 
-      minutesInput.addEventListener('keypress', (e) => {
-        if(e.key === 'Enter') {
-          setMinutesBtn.click();
-        }
-      });
+            startDeadlineBtn.addEventListener('click', startDeadline);
+            stopBtn.addEventListener('click', reset);
 
-      showCurrentTimeBtn.addEventListener('click', ()=>{
-        if(mode === MODE_CLOCK) return;
-        startClock();
-      });
+            presetsWrap.addEventListener('click', (e)=>{
+                const btn = e.target.closest('button[data-seconds]');
+                if(!btn || mode !== MODE_IDLE) return;
+                startDuration(parseInt(btn.dataset.seconds, 10));
+            });
 
-      deadlineInput.addEventListener('input', ()=>{
-        setError('');
-        updateControlStates();
-      });
+            setMinutesBtn.addEventListener('click', () => {
+                if(mode !== MODE_IDLE) return;
+                const minutes = parseInt(minutesInput.value, 10);
+                if(isNaN(minutes) || minutes <= 0) {
+                    setError('Please enter a valid number of minutes.');
+                    return;
+                }
+                startDuration(minutes * 60);
+            });
 
-      if(showCountdownToggle){
-        showCountdownToggle.addEventListener('change', ()=>{
-          updateDisplayBasedOnToggle();
-        });
-      }
+            minutesInput.addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') {
+                    setMinutesBtn.click();
+                }
+            });
 
-      if(chimeToggle){
-        chimeToggle.addEventListener('change', ()=>{
-          if(!chimeToggle.checked){
-            stopChime();
-          }
-        });
-      }
+            showCurrentTimeBtn.addEventListener('click', toggleDisplayMode);
 
-      const ro = new ResizeObserver(setFontSize);
-      ro.observe(display);
-      window.addEventListener('orientationchange', setFontSize);
-      window.addEventListener('load', setFontSize);
-      setMode(MODE_IDLE);
-      setFontSize();
-    })();
-  </script>
+            if(chimeToggle){
+                chimeToggle.addEventListener('change', ()=>{
+                    if(!chimeToggle.checked){
+                        stopChime();
+                    }
+                });
+            }
+
+            initTimePicker();
+            setMode(MODE_IDLE);
+            updateToggleBtnIcon();
+        })();
+    </script>
 </body>
 </html>

@@ -1,359 +1,248 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>KPresenter by prasert@cbs.chula.ac.th</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    :root {
-      --accent: #2db0ff;
-      --accent-orange: #FF9800;
-      --bg: #1e2125;
-      --bg-card: #282c34;
-      --fg: #f5f6fa;
-      --subdue: #b3b6be;
-      --danger: #ff4081;
-      --reset-crimson: #DC143C;
-      --border-radius: 14px;
-      --shadow: 0 2px 12px 0 rgba(20,20,40,0.11);
-      --transition: 0.23s cubic-bezier(.4,0,.2,1);
-    }
-    body {
-      background: var(--bg);
-      color: var(--fg);
-      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
-      margin: 0;
-      min-height: 100vh;
-    }
-    header {
-      text-align: center;
-      padding: 2rem 1rem 1rem 1rem;
-    }
-    h1 {
-      margin: 0 0 0.5rem;
-      font-size: 2.1rem;
-      color: var(--accent);
-    }
-    .desc {
-      margin-bottom: 0.9rem;
-      color: var(--subdue);
-    }
-    .file-loader {
-      margin: 1.5rem auto;
-      text-align: center;
-      max-width: 430px;
-      background: var(--bg-card);
-      border-radius: var(--border-radius);
-      padding: 1.3rem 1.5rem 1rem 1.5rem;
-      box-shadow: var(--shadow);
-    }
-    .file-loader label {
-      font-size: 1.05rem;
-      color: var(--subdue);
-      margin-bottom: 0.6rem;
-      display: block;
-    }
-    main {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 2.4rem 2.6rem;
-      padding: 10px 12px 65px 12px;
-      min-height: 55vh;
-    }
-    .section {
-      min-width: 260px;
-      background: var(--bg-card);
-      border-radius: var(--border-radius);
-      margin-bottom: 1.4rem;
-      box-shadow: var(--shadow);
-      flex: 1 1 340px;
-      max-width: 455px;
-      padding: 1.4rem 1.2rem 1.3rem 1.2rem;
-    }
-    .section :is(h2,h3) {
-      margin-top: 0;
-      color: var(--accent);
-      font-weight: 600;
-      font-size: 1.1rem;
-      letter-spacing: 0.05em;
-    }
-    .roulette {
-      position: relative;
-      min-height: 70px;
-      height: 67px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 0.4rem;
-      margin-top: 0.3rem;
-      font-size: 2.1rem;
-      font-weight: 600;
-      letter-spacing: 0.03em;
-      border-radius: 11px;
-      background: #23272e;
-      box-shadow: 0 2px 8px 0 rgba(60,70,100,0.16);
-      overflow: hidden;
-      transition: box-shadow var(--transition);
-    }
-    .roulette.spinning {
-      animation: pulse 0.7s infinite;
-      filter: blur(1.5px) brightness(1.1);
-    }
-    #teamRoulette.roulette.final { color: var(--accent-orange); border-color: var(--accent-orange);}
-    #memberRoulette.roulette.final { color: var(--accent); border-color: var(--accent);}
-    .roulette.final {
-      background: #181c22;
-      animation: pop .32s cubic-bezier(.6,0,0,1.4);
-      filter: none;
-      box-shadow: 0 0 0 5px rgba(30,200,255,0.11), var(--shadow);
-    }
-    @keyframes pulse {
-      0% { box-shadow: 0 0 5px var(--accent); }
-      100% { box-shadow: 0 0 15px var(--accent); }
-    }
-    @keyframes pop {
-      0% { transform: scale(0.82);}
-      80% { transform: scale(1.14);}
-      100% { transform: scale(1);}
-    }
-    .roulette .progress {
-      position: absolute;
-      left: 0; top: 0; height: 4px; width: 100%;
-      background: linear-gradient(90deg, var(--accent) var(--prog, 60%), transparent 0%);
-      border-radius: 4px;
-      transition: width 0.2s linear;
-    }
-    .teams-list, .members-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.7em;
-      margin-bottom: 0.8rem;
-      min-height: 38px;
-    }
-    .team-card, .member-chip {
-      padding: 0.52em 1.05em;
-      border-radius: var(--border-radius);
-      background: #22262d;
-      color: var(--fg);
-      font-size: 1rem;
-      box-shadow: 0 1px 4px 0 rgba(30,50,52,0.08);
-      transition: box-shadow var(--transition), border var(--transition), color var(--transition), background var(--transition), opacity var(--transition), filter var(--transition);
-      cursor: pointer;
-      outline: none;
-      border: 2px solid transparent;
-      opacity: 0.86;
-    }
-    .team-card.selected, .member-chip.selected {
-      background: var(--accent);
-      color: #fff;
-      opacity: 1;
-      border: 2px solid #fff;
-      font-weight: 600;
-      box-shadow: 0 1.5px 8px 0 rgba(35,200,255,0.19);
-    }
-    .team-card:not(.selected) { opacity: 0.60; }
-    .member-chip:not(.selected) { background: #25282d; color: var(--subdue); }
-    .team-card:focus, .member-chip:focus {
-      border: 2px solid var(--accent);
-      filter: brightness(1.12);
-      z-index: 2;
-    }
-    .team-card.unavailable, .member-chip.unavailable {
-      color: #999 !important;
-      background: repeating-linear-gradient(
-        135deg, #444 0 8px, #363636 8px 16px
-      ) !important;
-      opacity: 0.47 !important;
-      cursor: not-allowed;
-      filter: grayscale(0.6) blur(0.3px);
-      box-shadow: none !important;
-      border: 2px dashed #656;
-      text-decoration: line-through;
-      pointer-events: none;
-      position: relative;
-    }
-    .team-card.unavailable.selected, .member-chip.unavailable.selected {
-      filter: grayscale(0.9) blur(0.3px) brightness(0.93);
-      background: repeating-linear-gradient(
-        135deg, #636464 0 10px, #3b3b41 10px 20px
-      ) !important;
-      color: #a4a4a4 !important;
-      opacity: 0.61 !important;
-      border-color: #d36 !important;
-    }
-    .team-card.unavailable::after, .member-chip.unavailable::after {
-      content: "🚫";
-      position: absolute;
-      top: 5px; right: 6px;
-      font-size: 1.12em;
-      pointer-events: none;
-      opacity: 0.88;
-    }
-    .controls { display: flex; gap: 0.92em; margin-top: 0.2em; }
-    .controls button {
-      padding: 0.54em 1.26em;
-      font-size: 1.08rem;
-      border-radius: 12px;
-      background: var(--accent);
-      border: none;
-      color: #fff;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 1.2px 8px 0 rgba(25,120,220,0.10);
-      transition: background 0.14s;
-    }
-    #spinTeamBtn {
-      background: var(--accent-orange) !important;
-    }
-    .controls button:disabled {
-      background: #22262d !important;
-      color: #98a9b8 !important;
-      cursor: not-allowed;
-      filter: grayscale(0.3);
-    }
-    .controls .reset-btn {
-      background: var(--reset-crimson) !important;
-    }
-    .settings input[type=range] {
-      width: 90px; vertical-align: middle;
-      margin-right: 8px;
-    }
-    .settings label {
-      margin-right: 1.3em;
-      color: var(--subdue);
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    .settings input[type=number] {
-      width: 2.9em;
-      padding: 0.12em 0.2em;
-    }
-    .settings input[type=checkbox] {
-      vertical-align: middle;
-      transform: scale(1.14);
-      margin-right: 0.31em;
-    }
-    .settings { font-size: 0.97rem; color: var(--subdue); margin: 0.44em 0 0.5em 0;}
-    .history-table {
-      width: 100%;
-      background: transparent;
-      border-collapse: collapse;
-      margin-top: 0.8em;
-    }
-    .history-table th, .history-table td {
-      padding: 0.38em 0.65em;
-      text-align: left;
-      font-size: 0.98em;
-    }
-    .history-table th {
-      background: #20242a; color: #aef;
-      border-bottom: 2px solid var(--accent);
-    }
-    .history-table tbody tr:hover {
-      background: #293e52;
-      cursor: pointer;
-    }
-    .history-table td {
-      border-bottom: 1px solid #323c45;
-      color: var(--fg);
-    }
-    .export-btn {
-      display: inline-block;
-      margin-top: 0.4em;
-      padding: 0.32em 1.01em;
-      font-size: 0.99em;
-      border-radius: 8px;
-      border: none;
-      background: #238fe0;
-      color: #fff;
-      cursor: pointer;
-      float: right;
-    }
-    .toast {
-      position: fixed;
-      top: 26px; left: 50%;
-      transform: translateX(-50%);
-      background: var(--danger);
-      color: #fff;
-      padding: 0.74em 1.51em;
-      border-radius: 13px;
-      font-size: 1.11em;
-      z-index: 100;
-      box-shadow: 0 2px 12px rgba(255,0,50,0.11);
-      animation: fade-in .21s cubic-bezier(.4,0,.2,1);
-      pointer-events: none;
-    }
-    @keyframes fade-in {
-      from { opacity: 0; top: 18px;}
-      to   { opacity: 1; top: 26px;}
-    }
-    @media (max-width: 760px) {
-      main { flex-direction: column; align-items: stretch; }
-      .section { max-width: 100vw; }
-      .file-loader { max-width: 98vw;}
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>KPresenter by prasert@cbs.chula.ac.th</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .roulette {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+        .roulette.spinning {
+            animation: pulse 0.7s infinite;
+            filter: blur(1.5px) brightness(1.1);
+        }
+        .roulette.final {
+            background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+            animation: pop .32s cubic-bezier(.6,0,0,1.4);
+            filter: none;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2), 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .roulette-orange.final {
+            background: linear-gradient(135deg, #431407 0%, #0f172a 100%);
+            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2), 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 5px rgba(99, 102, 241, 0.5); }
+            100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.8); }
+        }
+        @keyframes pop {
+            0% { transform: scale(0.82);}
+            80% { transform: scale(1.08);}
+            100% { transform: scale(1);}
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.8) var(--prog, 60%), transparent 0%);
+        }
+        .progress-bar-orange {
+            background: linear-gradient(90deg, rgba(249, 115, 22, 0.8) var(--prog, 60%), transparent 0%);
+        }
+        .team-card, .member-chip {
+            transition: all 0.2s cubic-bezier(.4,0,.2,1);
+        }
+        .team-card.selected, .member-chip.selected {
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5), 0 10px 25px -5px rgba(99, 102, 241, 0.3);
+        }
+        .team-card.unavailable, .member-chip.unavailable {
+            background: repeating-linear-gradient(135deg, #374151 0 8px, #1f2937 8px 16px) !important;
+            opacity: 0.4;
+            filter: grayscale(0.6);
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+        .toast {
+            animation: toast-in .3s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateX(-50%) translateY(-10px);}
+            to { opacity: 1; transform: translateX(-50%) translateY(0);}
+        }
+    </style>
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen">
+    <div class="relative overflow-hidden min-h-screen">
+        <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"></div>
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-orange-500/10 rounded-full blur-3xl"></div>
+        
+        <div class="relative z-10">
+            <nav class="container mx-auto px-6 py-6">
+                <div class="flex items-center justify-center">
+                    <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center shadow-lg shadow-brand-500/25">
+                            <i class="fa-solid fa-graduation-cap text-white text-lg"></i>
+                        </div>
+                        <span class="text-xl font-bold text-white">PrasertCBS</span>
+                    </a>
+                </div>
+            </nav>
 
-<header>
-  <h1>Team & Member Roulette Picker</h1>
-  <div class="desc">Randomly pick a team, then a member in that team. Fun for groups, activities, and fair rotation!</div>
-</header>
+            <header class="container mx-auto px-6 pt-4 pb-8 text-center">
+                <h1 class="text-3xl md:text-5xl font-bold mb-3 leading-tight">
+                    <span class="gradient-text">Team & Member Roulette</span>
+                </h1>
+                <p class="text-slate-400 max-w-xl mx-auto">Randomly pick a team, then a member. Perfect for groups, activities, and fair rotation!</p>
+            </header>
 
-<div class="file-loader" id="fileLoader">
-  <label for="fileInput">Load team CSV/TSV (<b>team,member</b> or <b>team[TAB]member</b>):</label>
-  <input type="file" id="fileInput" accept=".csv,.tsv" />
-  <button type="button" id="useSampleBtn">Use sample data</button>
-  <div style="margin-top:0.7em;">
-    <textarea id="csvPaste" rows="3" placeholder="Paste CSV/TSV here (optional)" style="width:94%;font-size:1em;border-radius:8px;padding:0.4em;margin-top:0.4em;"></textarea>
-    <button type="button" id="loadPasteBtn">Load pasted CSV/TSV</button>
-  </div>
-  <div id="loadStatus" style="margin-top:0.6em;font-size:1em;color:var(--subdue);"></div>
-</div>
+            <div class="container mx-auto px-6 pb-8">
+                <div class="max-w-md mx-auto">
+                    <div class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6">
+                        <label class="block text-sm font-medium text-slate-300 mb-3">
+                            <i class="fa-solid fa-file-csv mr-2 text-indigo-400"></i>Load team CSV/TSV
+                        </label>
+                        <div class="flex flex-col gap-3">
+                            <input type="file" id="fileInput" accept=".csv,.tsv" class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-300 hover:file:bg-indigo-500/30 file:cursor-pointer file:transition-colors"/>
+                            <textarea id="csvPaste" rows="3" placeholder="Paste CSV/TSV here (team,member)" class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"></textarea>
+                            <div class="flex gap-2">
+                                <button type="button" id="loadPasteBtn" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl font-medium text-white text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all">
+                                    <i class="fa-solid fa-paste mr-2"></i>Load Pasted
+                                </button>
+                                <button type="button" id="useSampleBtn" class="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl font-medium text-slate-300 text-sm hover:bg-white/10 transition-all">
+                                    <i class="fa-solid fa-flask mr-2"></i>Sample
+                                </button>
+                            </div>
+                        </div>
+                        <div id="loadStatus" class="mt-3 text-sm text-slate-400"></div>
+                    </div>
+                </div>
+            </div>
 
-<main>
-  <div class="section" id="teamsSection">
-    <h2>Teams</h2>
-    <div class="roulette" id="teamRoulette"><span id="teamRouletteText">Load data to begin</span><div class="progress" id="teamProgress"></div></div>
-    <div class="teams-list" id="teamsList"></div>
-    <div class="controls">
-      <button id="spinTeamBtn" title="Pick team only">Spin Team</button>
+            <main class="container mx-auto px-6 pb-16">
+                <div class="max-w-6xl mx-auto grid gap-6 lg:grid-cols-3">
+                    
+                    <div class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6">
+                        <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-users text-orange-400"></i>Teams
+                        </h2>
+                        <div id="teamRoulette" class="roulette rounded-xl h-20 flex items-center justify-center text-2xl font-bold mb-4 overflow-hidden">
+                            <span id="teamRouletteText" class="text-slate-400">Load data to begin</span>
+                            <div id="teamProgress" class="progress-bar-orange absolute left-0 top-0 h-1 w-full rounded-full" style="display:none;"></div>
+                        </div>
+                        <div id="teamsList" class="flex flex-wrap gap-2 mb-4 min-h-[48px]"></div>
+                        <button id="spinTeamBtn" class="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-orange-500/25 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
+                            <i class="fa-solid fa-rotate mr-2"></i>Spin Team
+                        </button>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6">
+                        <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-user text-indigo-400"></i>Members
+                        </h2>
+                        <div id="memberRoulette" class="roulette rounded-xl h-20 flex items-center justify-center text-2xl font-bold mb-4 overflow-hidden">
+                            <span id="memberRouletteText" class="text-slate-400">Pick a team above</span>
+                            <div id="memberProgress" class="progress-bar absolute left-0 top-0 h-1 w-full rounded-full" style="display:none;"></div>
+                        </div>
+                        <div id="membersList" class="flex flex-wrap gap-2 mb-4 min-h-[48px]"></div>
+                        <div class="flex gap-2 mb-4">
+                            <button id="spinMemberBtn" class="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-indigo-500/25 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
+                                <i class="fa-solid fa-rotate mr-2"></i>Spin Member
+                            </button>
+                            <button id="resetBtn" class="px-4 py-3 bg-gradient-to-r from-rose-500 to-rose-600 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-rose-500/25 hover:-translate-y-0.5 transition-all">
+                                <i class="fa-solid fa-arrow-rotate-left"></i>
+                            </button>
+                        </div>
+                        <div class="space-y-3 pt-4 border-t border-white/5">
+                            <div class="flex items-center justify-between">
+                                <label class="text-sm text-slate-400">Team spin duration</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="range" min="1" max="8" id="teamDuration" value="3" class="w-16 accent-indigo-500"/>
+                                    <input type="number" min="1" max="8" id="teamDurationN" value="3" class="w-10 bg-slate-800/50 border border-white/10 rounded-lg px-2 py-1 text-sm text-center text-slate-200"/>
+                                    <span class="text-sm text-slate-500">s</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-sm text-slate-400">Member spin duration</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="range" min="1" max="8" id="memberDuration" value="3" class="w-16 accent-indigo-500"/>
+                                    <input type="number" min="1" max="8" id="memberDurationN" value="3" class="w-10 bg-slate-800/50 border border-white/10 rounded-lg px-2 py-1 text-sm text-center text-slate-200"/>
+                                    <span class="text-sm text-slate-500">s</span>
+                                </div>
+                            </div>
+                            <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+                                <input type="checkbox" id="avoidRepeatTeam" checked class="w-4 h-4 accent-indigo-500 rounded"/>
+                                No repeat team
+                            </label>
+                            <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+                                <input type="checkbox" id="avoidRepeatMember" checked class="w-4 h-4 accent-indigo-500 rounded"/>
+                                No repeat member (in team)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-clock-rotate-left text-purple-400"></i>History
+                            </h2>
+                            <button id="exportBtn" class="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-slate-300 hover:bg-white/10 transition-all">
+                                <i class="fa-solid fa-download mr-1"></i>Export
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto max-h-80 overflow-y-auto">
+                            <table class="w-full text-sm" id="historyTable">
+                                <thead class="sticky top-0 bg-slate-900/90 backdrop-blur">
+                                    <tr class="border-b border-white/10">
+                                        <th class="text-left py-2 px-2 text-slate-400 font-medium">#</th>
+                                        <th class="text-left py-2 px-2 text-slate-400 font-medium">Time</th>
+                                        <th class="text-left py-2 px-2 text-slate-400 font-medium">Team</th>
+                                        <th class="text-left py-2 px-2 text-slate-400 font-medium">Member</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <footer class="border-t border-white/5">
+                <div class="container mx-auto px-6 py-6">
+                    <div class="flex items-center justify-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center">
+                            <i class="fa-solid fa-graduation-cap text-white text-sm"></i>
+                        </div>
+                        <span class="text-slate-400 text-sm">&copy; 2025 PrasertCBS. All rights reserved.</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
     </div>
-  </div>
-  <div class="section" id="membersSection">
-    <h2>Members</h2>
-    <div class="roulette" id="memberRoulette"><span id="memberRouletteText">Pick a team above</span><div class="progress" id="memberProgress"></div></div>
-    <div class="members-list" id="membersList"></div>
-    <div class="controls">
-      <button id="spinMemberBtn" title="Pick member for selected team">Spin Member</button>
-      <button id="resetBtn" class="reset-btn" style="margin-left:1em;">Reset</button>
-    </div>
-    <div class="settings">
-      <label>Team spin: 
-        <input type="range" min="1" max="8" id="teamDuration" value="3" />
-        <input type="number" min="1" max="8" id="teamDurationN" value="3" />s
-      </label><br/>
-      <label>Member spin: 
-        <input type="range" min="1" max="8" id="memberDuration" value="3" />
-        <input type="number" min="1" max="8" id="memberDurationN" value="3" />s
-      </label><br/>
-      <label><input type="checkbox" id="avoidRepeatTeam" checked />No repeat team</label><br/>
-      <label><input type="checkbox" id="avoidRepeatMember" checked />No repeat member (in team)</label>
-    </div>
-  </div>
-  <div class="section" id="historySection">
-    <h2>Draw History</h2>
-    <table class="history-table" id="historyTable">
-      <thead><tr><th>#</th><th>Time</th><th>Team</th><th>Member</th></tr></thead>
-      <tbody></tbody>
-    </table>
-    <button class="export-btn" id="exportBtn">Export history CSV</button>
-  </div>
-</main>
-<div class="toast" style="display:none;" id="toast"></div>
+    <div class="toast hidden fixed top-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-gradient-to-r from-rose-500 to-rose-600 rounded-xl text-white font-medium shadow-lg shadow-rose-500/25 z-50" id="toast"></div>
+
 <script>
 const SAMPLE_CSV = `team,member
 coffee,espresso
@@ -374,11 +263,11 @@ bakery,croissant
 bakery,muffin
 bakery,banana bread`;
 
-function showToast(msg, ms=2100) {
+function showToast(msg, ms=2500) {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
-  toast.style.display = 'block';
-  setTimeout(()=>{ toast.style.display='none'; }, ms);
+  toast.classList.remove('hidden');
+  setTimeout(()=>{ toast.classList.add('hidden'); }, ms);
 }
 function uniqId() { return Math.random().toString(36).slice(2,9) + Date.now().toString(32); }
 function nowStr() {
@@ -405,44 +294,25 @@ let state = {
   usedTeamIds: new Set(),
 };
 
-// Updated parser that auto-detects CSV or TSV and inserts headers if missing or incomplete
 function parseCsv(text) {
-  // Detect if the input contains tabs (TSV) or commas (CSV) in the first line
   const firstLine = text.trim().split('\n')[0];
   const hasTabs = firstLine.includes('\t');
-  const hasCommas = firstLine.includes(',');
-
-  // Use tab separator for TSV, comma for CSV
   const separator = hasTabs ? '\t' : ',';
-
   let rows = text.trim().replace(/\r/g,'').split('\n').map(x=>x.split(separator));
-  // (1) Add headers if *any* missing
   let headersRaw = rows[0].map(x => x.trim().toLowerCase());
-  // If neither "team" nor "member" in headers, try to infer
   if ((headersRaw.indexOf("team") === -1 && headersRaw.indexOf("member") === -1) || rows.length === 1) {
-    // If only one column in data, treat as "team"
-    if (rows[0].length === 1) {
-      rows.unshift(["team"]);
-    }
-    // If two columns, treat as "team,member"
-    else if (rows[0].length === 2) {
-      rows.unshift(["team", "member"]);
-    }
+    if (rows[0].length === 1) rows.unshift(["team"]);
+    else if (rows[0].length === 2) rows.unshift(["team", "member"]);
     headersRaw = rows[0].map(x => x.trim().toLowerCase());
   }
-
   let tIdx = headersRaw.indexOf('team');
   let mIdx = headersRaw.indexOf('member');
-  // If only "team" column, treat "member" as same as "team"
   if (tIdx !== -1 && mIdx === -1) {
     headersRaw.push('member');
     mIdx = headersRaw.length - 1;
-    for (let i = 1; i < rows.length; ++i) {
-      rows[i][mIdx] = rows[i][tIdx];
-    }
+    for (let i = 1; i < rows.length; ++i) rows[i][mIdx] = rows[i][tIdx];
   }
   if (tIdx === -1 || mIdx === -1) return null;
-
   let teams = [], teamsByName = {}, members = {};
   for(let i=1; i<rows.length; ++i){
     let t = rows[i][tIdx] ? rows[i][tIdx].trim() : '';
@@ -455,7 +325,7 @@ function parseCsv(text) {
   }
   return {teams, members};
 }
-// (The rest of the JS is unchanged)
+
 function loadData(newData){
   data = newData;
   state.selectedTeamId = null;
@@ -465,7 +335,7 @@ function loadData(newData){
   state.lastMemberId = {};
   state.usedMemberIds = new Set();
   state.usedTeamIds = new Set();
-  document.getElementById('loadStatus').textContent = `Loaded ${data.teams.length} teams, ${Object.keys(data.members).length} members`;
+  document.getElementById('loadStatus').innerHTML = `<i class="fa-solid fa-check-circle text-emerald-400 mr-1"></i>Loaded ${data.teams.length} teams, ${Object.keys(data.members).length} members`;
   renderTeams();
   renderMembers();
   renderHistory();
@@ -481,20 +351,17 @@ window.addEventListener('DOMContentLoaded', ()=>{
       reader.onload = evt => {
         let parsed = parseCsv(evt.target.result);
         if(parsed) loadData(parsed);
-        else showToast('File format error: need team/member columns (supports both CSV and TSV)');
+        else showToast('File format error: need team/member columns');
       };
       reader.readAsText(e.target.files[0], 'utf-8');
     }
   });
-  document.getElementById('useSampleBtn').onclick = ()=>{
-    let parsed = parseCsv(SAMPLE_CSV);
-    loadData(parsed);
-  };
+  document.getElementById('useSampleBtn').onclick = ()=> loadData(parseCsv(SAMPLE_CSV));
   document.getElementById('loadPasteBtn').onclick = ()=>{
     let txt = document.getElementById('csvPaste').value;
     let parsed = parseCsv(txt);
     if(parsed) loadData(parsed);
-    else showToast('Paste error: input must have team column (supports both CSV and TSV)');
+    else showToast('Paste error: input must have team column');
   };
   ['teamDuration','teamDurationN','memberDuration','memberDurationN'].forEach(id=>{
     document.getElementById(id).addEventListener('input', (e)=>{
@@ -543,6 +410,7 @@ function restoreSettings(){
     document.getElementById('avoidRepeatMember').checked = !!state.avoidRepeatMember;
   } catch { }
 }
+
 function renderTeams(){
   let L = document.getElementById('teamsList');
   L.innerHTML = '';
@@ -550,9 +418,14 @@ function renderTeams(){
     let unavailable = state.usedTeamIds.has(team.id);
     let d = document.createElement('div');
     d.tabIndex = unavailable ? -1 : 0;
-    d.className = 'team-card'+(team.id===state.selectedTeamId?' selected':'')+(unavailable?' unavailable':'');
+    d.className = `team-card px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer outline-none ${
+      team.id===state.selectedTeamId 
+        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25' 
+        : unavailable 
+          ? 'bg-slate-800/50 text-slate-500 unavailable' 
+          : 'bg-slate-800/50 text-slate-300 hover:bg-slate-700/50'
+    }`;
     d.textContent = team.name+` (${team.members.length})`;
-    d.title = unavailable ? 'Team already drawn (unavailable)' : team.name;
     if(!unavailable) {
       d.onclick = ()=>{ state.selectedTeamId=team.id; state.selectedMemberId=null; renderTeams(); renderMembers(); renderRoulette(team.name, 'team'); renderRoulette(null,'member');};
       d.onkeyup = function(e){if(e.key==='Enter'){d.onclick();}};
@@ -560,18 +433,24 @@ function renderTeams(){
     L.appendChild(d);
   });
 }
+
 function renderMembers(){
   let M = document.getElementById('membersList');
   M.innerHTML = '';
   let team = data.teams.find(t=>t.id===state.selectedTeamId);
-  if(!team){ M.innerHTML = '<span style="color:var(--subdue)">Pick a team to view members.</span>'; return;}
+  if(!team){ M.innerHTML = '<span class="text-slate-500 text-sm">Pick a team to view members</span>'; return;}
   team.members.forEach(mem=>{
     let unavailable = state.usedMemberIds.has(mem.id);
     let d = document.createElement('div');
     d.tabIndex = unavailable ? -1 : 0;
-    d.className = 'member-chip'+(mem.id===state.selectedMemberId?' selected':'')+(unavailable?' unavailable':'');
+    d.className = `member-chip px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer outline-none ${
+      mem.id===state.selectedMemberId 
+        ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-500/25' 
+        : unavailable 
+          ? 'bg-slate-800/50 text-slate-500 unavailable' 
+          : 'bg-slate-800/50 text-slate-300 hover:bg-slate-700/50'
+    }`;
     d.textContent = mem.name;
-    d.title = unavailable ? 'Already picked (unavailable)' : mem.name;
     if(!unavailable) {
       d.onclick = ()=>{
         state.selectedMemberId = mem.id;
@@ -588,35 +467,38 @@ function renderMembers(){
     M.appendChild(d);
   });
 }
+
 function renderRoulette(val, which, progress=1, spinning=false){
   let txt = document.getElementById(which==='team'?'teamRouletteText':'memberRouletteText');
   let box = document.getElementById(which==='team'?'teamRoulette':'memberRoulette');
   let progElm = document.getElementById(which==='team'?'teamProgress':'memberProgress');
   if(spinning){
     box.classList.add('spinning');
-    box.classList.remove('final');
+    box.classList.remove('final', 'roulette-orange');
     progElm.style.setProperty('--prog', Math.round(progress*100)+'%');
     progElm.style.display = '';
     txt.textContent = val;
+    txt.className = which==='team' ? 'text-orange-400' : 'text-indigo-400';
   } else if(val){
     box.classList.remove('spinning');
     box.classList.add('final');
+    if(which==='team') box.classList.add('roulette-orange');
     txt.textContent = val;
+    txt.className = which==='team' ? 'text-orange-400' : 'text-indigo-400';
     progElm.style.display = 'none';
   } else {
-    box.classList.remove('spinning');
-    box.classList.remove('final');
+    box.classList.remove('spinning', 'final', 'roulette-orange');
     progElm.style.display = 'none';
-    txt.textContent = which==='team' ? (data.teams.length?'Pick a team or Spin!':'Load data to begin') :
-      (state.selectedTeamId?'Pick member or Spin!':'Pick a team above');
+    txt.textContent = which==='team' ? (data.teams.length?'Pick a team or Spin!':'Load data to begin') : (state.selectedTeamId?'Pick member or Spin!':'Pick a team above');
+    txt.className = 'text-slate-400';
   }
 }
+
 function spinRoulette(mode){
   if(!data.teams.length){ showToast('Load a valid CSV first'); return;}
   if(mode==='team'){
     let validTeams = data.teams.filter(t=>!state.usedTeamIds.has(t.id));
-    if(state.avoidRepeatTeam && validTeams.length>1)
-      validTeams = validTeams.filter(t=>t.id!==state.selectedTeamId);
+    if(state.avoidRepeatTeam && validTeams.length>1) validTeams = validTeams.filter(t=>t.id!==state.selectedTeamId);
     if(!validTeams.length) { showToast('No teams left to pick'); return;}
     let i = Math.floor(Math.random()*validTeams.length);
     let target = validTeams[i];
@@ -667,24 +549,23 @@ function spinRoulette(mode){
     },50);
   }
 }
+
 function appendHistory(team, member, memberId=null, teamId=null){
-  state.drawHistory.unshift({
-    time: nowStr(),
-    team, member
-  });
-  if(state.drawHistory.length>state.maxHistory)
-    state.drawHistory.pop();
+  state.drawHistory.unshift({ time: nowStr(), team, member });
+  if(state.drawHistory.length>state.maxHistory) state.drawHistory.pop();
   if(memberId) state.usedMemberIds.add(memberId);
   renderTeams();
   renderMembers();
   renderHistory();
 }
+
 function renderHistory(){
   let tb = document.querySelector('#historyTable tbody');
   tb.innerHTML = '';
   state.drawHistory.forEach((r,i)=>{
     let tr = document.createElement('tr');
-    tr.innerHTML = `<td>${i+1}</td><td>${r.time}</td><td>${r.team}</td><td>${r.member}</td>`;
+    tr.className = 'border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors';
+    tr.innerHTML = `<td class="py-2 px-2 text-slate-500">${i+1}</td><td class="py-2 px-2 text-slate-400">${r.time}</td><td class="py-2 px-2 text-orange-400">${r.team}</td><td class="py-2 px-2 text-indigo-400">${r.member}</td>`;
     tr.onclick = ()=>{
       let t = data.teams.find(t=>t.name===r.team);
       let m = t && t.members.find(mem=>mem.name===r.member);
@@ -697,6 +578,7 @@ function renderHistory(){
     tb.appendChild(tr);
   });
 }
+
 function exportHistory(){
   if(!state.drawHistory.length){showToast('No history to export');return;}
   function esc(s){
@@ -708,7 +590,7 @@ function exportHistory(){
   let rows = ['No,Time,Team,Member'];
   state.drawHistory.slice().reverse().forEach((r,i)=>rows.push(`${i+1},${esc(r.time)},${esc(r.team)},${esc(r.member)}`));
   let csv = rows.join('\r\n');
-  const bom = '\uFEFF'; // UTF-8 BOM
+  const bom = '\uFEFF';
   const blob = new Blob([bom + csv], {type: 'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -719,12 +601,13 @@ function exportHistory(){
   link.remove();
   URL.revokeObjectURL(url);
 }
+
 function confetti(){
   let n = 22;
   let center = document.body;
   for(let i=0;i<n;++i){
     let e = document.createElement('div');
-    let clr = ['#2db0ff','#ffe27a','#ff4081','#9ff659','#fe7575'][i%5];
+    let clr = ['#8b5cf6','#f97316','#ec4899','#10b981','#06b6d4'][i%5];
     let s = Math.random()*0.32+0.18;
     e.style.cssText = `position:fixed;pointer-events:none;z-index:2000;left:50vw;top:49vh;width:17px;height:17px;opacity:0.96;transform:scale(${s});transition:all 1.34s cubic-bezier(.61,0,.61,1);background:${clr};border-radius:50%`;
     setTimeout(()=>{
